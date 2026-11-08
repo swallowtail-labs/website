@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Swallowtail</title>
-<meta name="description" content="Self-improving AI through software-hardware co-learning.">
+<meta name="description" content="Software-hardware co-design that makes 3D chips possible.">
 <link rel="icon" href="swallowtail-mark.svg" type="image/svg+xml">
 <meta property="og:title" content="Swallowtail">
-<meta property="og:description" content="Self-improving AI through software-hardware co-learning.">
+<meta property="og:description" content="Software-hardware co-design that makes 3D chips possible.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://swallowtaillabs.com/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -77,58 +77,11 @@
     font-size: clamp(1.08rem, 2.8vw, 1.3rem);
     line-height: 1.6;
     color: var(--slate);
+    text-wrap: balance;
   }
 
   /* keep the compound from breaking across lines */
   .nb { white-space: nowrap; }
-
-  /* The rejected term sits above its replacement, inline after the compound.
-     vertical-align: middle centres the pair on the sentence, so the line runs
-     between the two terms rather than level with either. Children
-     shrink to their own width so the cross spans the word, not the column.
-     Default state is resolved, so no-animation readers see the finished pair. */
-  .swap {
-    display: inline-block;
-    vertical-align: middle;
-    text-align: center;
-  }
-
-  .was,
-  .now {
-    display: block;
-    width: fit-content;
-    margin-inline: auto;
-    line-height: 1.35;
-  }
-
-  .was {
-    position: relative;
-    margin-bottom: 0.12em;
-    opacity: 0.55;
-    text-decoration: none;
-  }
-
-  .was::before,
-  .was::after {
-    content: "";
-    position: absolute;
-    left: -0.12em;
-    right: -0.12em;
-    top: 50%;
-    height: 1px;
-    background: currentColor;
-    transform-origin: center;
-  }
-
-  /* +0.12em drops the intersection from the em-box centre to the ink centre */
-  .was::before { transform: translateY(calc(-50% + 0.12em)) rotate(10deg)  scaleX(1); }
-  .was::after  { transform: translateY(calc(-50% + 0.12em)) rotate(-10deg) scaleX(1); }
-
-  .now {
-    color: var(--cool);
-    font-weight: 500;
-    opacity: 1;
-  }
 
   footer {
     padding: 0 1.5rem clamp(2rem, 6vh, 3rem);
@@ -145,55 +98,8 @@
     .lockup  { animation-delay: 0s; }
     .tagline { animation-delay: 0.16s; }
 
-    /* The sentence first reads as the conventional claim: co-design sits in the
-       slot, at full weight, as if it were the term. It gets crossed out, then
-       displaced upward as co-learning takes the slot it vacated. --lift was
-       measured, not derived: it is the shift that puts co-design's baseline on
-       the sentence's baseline. Remeasure it if the serif or line-height change. */
-    .swap {
-      --lift: 0.584em;
-      transform: translateY(var(--lift));
-      animation: push 0.65s cubic-bezier(0.22, 1, 0.36, 1) 1.95s forwards;
-    }
-
-    .was {
-      opacity: 1;
-      animation: dim 0.65s ease 1.95s forwards;
-    }
-
-    .was::before {
-      transform: translateY(calc(-50% + 0.12em)) rotate(10deg) scaleX(0);
-      animation: crossA 0.4s cubic-bezier(0.65, 0, 0.35, 1) 1.25s forwards;
-    }
-
-    .was::after {
-      transform: translateY(calc(-50% + 0.12em)) rotate(-10deg) scaleX(0);
-      animation: crossB 0.4s cubic-bezier(0.65, 0, 0.35, 1) 1.42s forwards;
-    }
-
-    .now {
-      opacity: 0;
-      animation: reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) 2.15s forwards;
-    }
-
     @keyframes rise {
       from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: none; }
-    }
-    @keyframes crossA {
-      to { transform: translateY(calc(-50% + 0.12em)) rotate(10deg) scaleX(1); }
-    }
-    @keyframes crossB {
-      to { transform: translateY(calc(-50% + 0.12em)) rotate(-10deg) scaleX(1); }
-    }
-    @keyframes push {
-      to { transform: translateY(0); }
-    }
-    @keyframes dim {
-      to { opacity: 0.55; }
-    }
-    @keyframes reveal {
-      from { opacity: 0; transform: translateY(5px); }
       to   { opacity: 1; transform: none; }
     }
   }
@@ -207,7 +113,7 @@
     <h1>SWALLOWTAIL</h1>
   </div>
 
-  <p class="tagline">self-improving AI through <span class="nb">software-hardware</span> <span class="swap"><s class="was">co-design</s><span class="now">co-learning</span></span></p>
+  <p class="tagline"><span class="nb">software-hardware</span> co-design that makes 3D chips possible</p>
 </main>
 
 <footer>&copy; 2026 Swallowtail Labs, Inc.</footer>
