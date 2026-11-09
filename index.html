@@ -12,16 +12,20 @@
 <meta property="og:url" content="https://swallowtaillabs.com/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink:   #1A1A1A;
-    --slate: #4A5568;
-    --cool:  #1E3A5F;
-    --pale:  #E8E8E8;
-    --paper: #FDFDFC;
-    --serif: "EB Garamond", Georgia, "Iowan Old Style", "Times New Roman", serif;
-    --sans:  -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+    --paper:  #FCFCFB;
+    --ink:    #151A21;
+    --slate:  #5A6575;
+    --navy:   #1E3A5F;
+    --line:   #DDE3EA;
+    --accent: #B45309;
+    --copper: #B87333;
+    --cool:   #2F6FB3;
+    --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --sans:  Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     color-scheme: light;
   }
 
@@ -30,93 +34,668 @@
 
   body {
     margin: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
     background: var(--paper);
     color: var(--ink);
-    font: 400 17px/1.65 var(--sans);
+    font: 300 17px/1.7 var(--sans);
     -webkit-font-smoothing: antialiased;
   }
 
-  main {
-    flex: 1;
+  /* ---- header ---------------------------------------------------------- */
+  .top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 5;
+    padding: clamp(1.1rem, 3vw, 1.8rem) clamp(1.25rem, 4vw, 3rem);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: var(--navy);
+    text-decoration: none;
+  }
+
+  .brand img { width: 26px; height: auto; }
+
+  .brand span {
+    font: 500 0.92rem/1 var(--sans);
+    letter-spacing: 0.22em;
+  }
+
+  /* ---- story: sticky chip beside the pitch ----------------------------- */
+  .story {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  }
+
+  .stage {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    align-self: start;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    padding: clamp(3.5rem, 10vh, 6rem) 1.5rem;
+    padding: 4vh 3vw 4vh 0;
   }
 
-  .lockup {
+  .stage svg {
+    width: 100%;
+    height: 100%;
+    max-height: 760px;
+    overflow: visible;
+  }
+
+  .steps {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 0 clamp(1.25rem, 4vw, 3rem) 0 clamp(1.25rem, 6vw, 6.5rem);
+  }
+
+  .step {
+    min-height: 100vh;
+    min-height: 100svh;
     display: flex;
-    align-items: center;
-    gap: clamp(0.7rem, 2.4vw, 1.15rem);
+    flex-direction: column;
+    justify-content: center;
+    max-width: 31rem;
+    opacity: 0.22;
+    transition: opacity 0.6s ease;
   }
 
-  .mark {
-    flex: none;
-    width: clamp(46px, 10vw, 62px);
-    height: auto;
-  }
+  .step.is-active { opacity: 1; }
 
-  h1 {
-    /* cancels the trailing letter-space so the lockup sits optically centred */
-    margin: 0 -0.16em 0 0;
-    font-size: clamp(1.9rem, 6vw, 2.6rem);
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    color: var(--cool);
-  }
-
-  .tagline {
-    max-width: 40rem;
-    margin: clamp(1.6rem, 4.5vh, 2.4rem) 0 0;
-    font-family: var(--serif);
-    font-size: clamp(1.08rem, 2.8vw, 1.3rem);
-    line-height: 1.6;
-    color: var(--slate);
+  .hero h1 {
+    margin: 0;
+    font: italic 400 clamp(2.7rem, 5.4vw, 4.6rem)/1.02 var(--serif);
+    letter-spacing: -0.012em;
+    color: var(--navy);
     text-wrap: balance;
   }
 
-  /* keep the compound from breaking across lines */
+  .step h2 {
+    margin: 0 0 0.9rem;
+    font: 400 clamp(2.2rem, 3.6vw, 3.2rem)/1.06 var(--serif);
+    letter-spacing: -0.008em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .step p {
+    margin: 0 0 0.9rem;
+    color: var(--slate);
+    font-size: 1.04rem;
+  }
+
+  .step p:last-child { margin-bottom: 0; }
+
+  /* small charts inside the text column */
+  .bars {
+    margin: 1.4rem 0 1.2rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: 0.9rem;
+    row-gap: 0.55rem;
+    font-size: 0.82rem;
+    color: var(--slate);
+  }
+
+  .bars .track { height: 6px; }
+  .bars .fill { display: block; height: 100%; border-radius: 3px; background: var(--navy); }
+  .bars .hot  { background: var(--accent); }
+  .bars .num  { font: 400 0.8rem/1 var(--mono); color: var(--ink); }
+  .bars .num.hot-num { color: var(--accent); }
+
+  .caption {
+    font-size: 0.76rem !important;
+    color: #8A93A0 !important;
+  }
+
   .nb { white-space: nowrap; }
 
-  footer {
-    padding: 0 1.5rem clamp(2rem, 6vh, 3rem);
+  /* ---- co-design loop ---------------------------------------------------- */
+  .loop {
+    padding: clamp(5rem, 14vh, 8rem) clamp(1.25rem, 5vw, 3rem) clamp(3rem, 8vh, 5rem);
     text-align: center;
+  }
+
+  .loop h2 {
+    margin: 0 auto clamp(2.8rem, 7vh, 4rem);
+    max-width: 34rem;
+    font: italic 400 clamp(2rem, 3.6vw, 3rem)/1.08 var(--serif);
+    color: var(--navy);
+    text-wrap: balance;
+  }
+
+  .flow {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: center;
+    gap: clamp(0.5rem, 2vw, 1.4rem);
+    max-width: 46rem;
+    margin: 0 auto;
+    padding-bottom: 3.2rem;
+  }
+
+  .node {
+    padding: 1.15rem 0.6rem 1.05rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .node .tag {
+    display: block;
+    font: 400 0.66rem/1.4 var(--sans);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--slate);
+  }
+
+  .node .name {
+    display: block;
+    margin-top: 0.3rem;
+    font: italic 400 clamp(1.6rem, 3vw, 2.1rem)/1 var(--serif);
+    color: var(--navy);
+  }
+
+  .node.hw { border-color: rgba(180, 83, 9, 0.35); }
+  .node.hw .name { color: var(--accent); }
+
+  .arrow {
+    width: clamp(1.2rem, 3vw, 2.4rem);
+    height: 1px;
+    background: var(--slate);
+    position: relative;
+    opacity: 0.6;
+  }
+
+  .arrow::after {
+    content: "";
+    position: absolute;
+    right: -1px; top: -3px;
+    border-left: 6px solid var(--slate);
+    border-top: 3.5px solid transparent;
+    border-bottom: 3.5px solid transparent;
+  }
+
+  /* return path from the chip back to EDA */
+  .return {
+    position: absolute;
+    left: 16.5%; right: 16.5%;
+    bottom: 0.9rem;
+    height: 1.6rem;
+    border: 1px solid rgba(180, 83, 9, 0.55);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .return::before {
+    content: "";
+    position: absolute;
+    left: -4px; top: -6px;
+    border-bottom: 6px solid rgba(180, 83, 9, 0.75);
+    border-left: 3.5px solid transparent;
+    border-right: 3.5px solid transparent;
+  }
+
+  .return span {
+    position: absolute;
+    left: 50%; bottom: -0.6rem;
+    transform: translateX(-50%);
+    padding: 0 0.5rem;
+    background: var(--paper);
+    font: 400 0.72rem/1.2 var(--sans);
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+
+  footer {
+    padding: 2.5rem clamp(1.25rem, 5vw, 3rem) clamp(2rem, 6vh, 3rem);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem 2rem;
     font-size: 0.82rem;
     letter-spacing: 0.02em;
     color: var(--slate);
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .lockup, .tagline {
-      animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-    .lockup  { animation-delay: 0s; }
-    .tagline { animation-delay: 0.16s; }
+  footer a {
+    color: var(--navy);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+  }
 
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: none; }
+  footer a:hover { border-color: var(--navy); }
+
+  /* ---- chip drawing ------------------------------------------------------ */
+  #chip .side   { stroke: var(--navy); stroke-width: 0.026; stroke-opacity: 0.7; stroke-linejoin: round; }
+  #chip .top    { stroke: var(--navy); stroke-width: 0.026; stroke-opacity: 0.8; stroke-linejoin: round; }
+  #chip .ptop   { fill: #F2F5F8; stroke: #A9B4C2; stroke-width: 0.022; stroke-linejoin: round; }
+  #chip .pside  { stroke: #A9B4C2; stroke-width: 0.022; stroke-linejoin: round; }
+  #chip .band   { stroke: none; }
+  #chip .blocks { fill: none; stroke: var(--navy); stroke-width: 0.016; stroke-opacity: 0.28; }
+  #chip .via    { fill: none; stroke: var(--copper); stroke-width: 0.034; stroke-linecap: round; }
+  #chip .trace  { fill: none; stroke: var(--copper); stroke-width: 0.05; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 0.26 0.18; }
+  #chip .chan   { fill: none; stroke: var(--cool); stroke-width: 0.03; stroke-linecap: round; stroke-dasharray: 0.16 0.12; }
+  #chip .inlet  { fill: #fff; stroke: var(--cool); stroke-width: 0.03; }
+  #chip .lbl    { font: 400 0.36px var(--sans); letter-spacing: 0.04em; fill: var(--copper); paint-order: stroke; stroke: var(--paper); stroke-width: 0.12; }
+  #chip .lead   { stroke: var(--copper); stroke-width: 0.018; fill: none; }
+
+  /* ---- narrow screens: chip pinned on top, text scrolls below ----------- */
+  @media (max-width: 820px) {
+    .story { display: block; }
+
+    .stage {
+      height: 46vh;
+      height: 46svh;
+      z-index: 3;
+      padding: 3.6rem 1rem 0.5rem;
+      background: linear-gradient(var(--paper) 88%, rgba(252, 252, 251, 0));
     }
+
+    .steps { padding: 0 1.4rem; }
+
+    .step {
+      min-height: 72vh;
+      min-height: 72svh;
+      justify-content: center;
+      opacity: 1;
+    }
+
+    .hero { min-height: 40vh !important; min-height: 40svh !important; }
+
+    .flow { grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0.4rem; }
+    .node { padding: 0.9rem 0.3rem 0.85rem; }
+    .node .tag { font-size: 0.56rem; letter-spacing: 0.1em; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .step { transition: none; }
   }
 </style>
 </head>
 <body>
 
+<header class="top">
+  <a class="brand" href="/"><img src="swallowtail-mark.svg" alt="" width="26" height="26"><span>SWALLOWTAIL</span></a>
+</header>
+
 <main>
-  <div class="lockup">
-    <img class="mark" src="swallowtail-mark.svg" alt="Swallowtail mark" width="62" height="62">
-    <h1>SWALLOWTAIL</h1>
+  <div class="story">
+    <div class="stage">
+      <svg id="chip" role="img" aria-label="A 3D chip: four dies stacked into a tower"></svg>
+    </div>
+
+    <div class="steps">
+      <section class="step hero" data-state="hero">
+        <h1><span class="nb">software-hardware</span> <span class="nb">co-design</span> that makes 3D chips possible</h1>
+      </section>
+
+      <section class="step" data-state="flat">
+        <h2>Chips today are mostly 2D.</h2>
+      </section>
+
+      <section class="step" data-state="stack">
+        <h2>3D chips stack them like a tower.</h2>
+      </section>
+
+      <section class="step" data-state="energy">
+        <h2>Moving data costs up to 1000&times; more energy than computing.</h2>
+        <div class="bars" aria-hidden="true">
+          <span>compute</span><span class="track"><span class="fill" style="width:0.6%;min-width:3px"></span></span><span class="num">1&times;</span>
+          <span>move data</span><span class="track"><span class="fill hot" style="width:100%"></span></span><span class="num hot-num">1000&times;</span>
+        </div>
+      </section>
+
+      <section class="step" data-state="heat">
+        <h2>Heat cannot escape.</h2>
+        <div class="bars">
+          <span>side by side</span><span class="track"><span class="fill" style="width:28.8%"></span></span><span class="num">11.0 K</span>
+          <span>stacked</span><span class="track"><span class="fill hot" style="width:100%"></span></span><span class="num hot-num">38.2 K</span>
+        </div>
+        <p class="caption">Simulated peak rise (115.4 W, same cold plate)</p>
+      </section>
+
+      <section class="step" data-state="design">
+        <h2>Inverse design</h2>
+        <p>Chip shape and cooling layout</p>
+      </section>
+
+      <section class="step" data-state="control">
+        <h2>Inverse control</h2>
+        <p>When to push power, when to cool</p>
+      </section>
+    </div>
   </div>
 
-  <p class="tagline"><span class="nb">software-hardware</span> co-design that makes 3D chips possible</p>
+  <section class="loop">
+    <div class="flow">
+      <div class="node"><span class="tag">software</span><span class="name">EDA</span></div>
+      <span class="arrow" aria-hidden="true"></span>
+      <div class="node"><span class="tag">software and hardware</span><span class="name">IP</span></div>
+      <span class="arrow" aria-hidden="true"></span>
+      <div class="node hw"><span class="tag">hardware</span><span class="name">3D chip</span></div>
+      <div class="return" aria-hidden="true"><span>data</span></div>
+    </div>
+  </section>
 </main>
 
-<footer>&copy; 2026 Swallowtail Labs, Inc.</footer>
+<footer>
+  <a href="mailto:thomas@swallowtaillabs.com">thomas@swallowtaillabs.com</a>
+  <span>&copy; 2026 Swallowtail Labs, Inc.</span>
+</footer>
 
+<script>
+(() => {
+  const svg = document.getElementById('chip');
+  const NS = 'http://www.w3.org/2000/svg';
+  const mk = (tag, attrs, parent) => {
+    const e = document.createElementNS(NS, tag);
+    if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  };
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- world: four dies (half size HS, thickness H) on a platform ------------
+  const HS = 2.0, H = 0.42, PT = 0.3;
+  const GRID = [[-2.45, -2.45], [2.45, -2.45], [-2.45, 2.45], [2.45, 2.45]];
+  const LAYER_T = [1.0, 0.86, 0.62, 0.38];           // bottom tier runs hottest
+
+  // orthographic camera: yaw about z, fixed 30 degree elevation
+  const sE = Math.sin(Math.PI / 6), cE = Math.cos(Math.PI / 6);
+  let cy = 1, sy = 0;
+  const setYaw = d => { const a = d * Math.PI / 180; cy = Math.cos(a); sy = Math.sin(a); };
+  const P = (x, y, z) => [x * cy - y * sy, -((x * sy + y * cy) * sE + z * cE)];
+  const depth = (x, y, z) => -(x * sy + y * cy) * cE + z * sE;
+  const fmt = p => p[0].toFixed(3) + ',' + p[1].toFixed(3);
+  const poly = list => list.map(fmt).join(' ');
+
+  // ---- states the drawing moves between, one per text step ------------------
+  const S = {
+    hero:    { layout: 1, gap: 0.78, plat: 2.9, platA: 0, traces: 0, vias: 1,    heat: 0,    cool: 0, pulse: 0, yaw: 45, float: 1, mm: 0, um: 0 },
+    flat:    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,    cool: 0, pulse: 0, yaw: 40, float: 0, mm: 1, um: 0 },
+    stack:   { layout: 1, gap: 0.14, plat: 2.9, platA: 1, traces: 0, vias: 1,    heat: 0,    cool: 0, pulse: 0, yaw: 50, float: 0, mm: 0, um: 1 },
+    energy:  { layout: 1, gap: 0.14, plat: 2.9, platA: 1, traces: 0, vias: 1,    heat: 0,    cool: 0, pulse: 0, yaw: 56, float: 0, mm: 0, um: 1 },
+    heat:    { layout: 1, gap: 0.6,  plat: 2.9, platA: 1, traces: 0, vias: 0.35, heat: 1,    cool: 0, pulse: 0, yaw: 45, float: 0, mm: 0, um: 0 },
+    design:  { layout: 1, gap: 0.6,  plat: 2.9, platA: 1, traces: 0, vias: 0.35, heat: 0.3,  cool: 1, pulse: 0, yaw: 40, float: 0, mm: 0, um: 0 },
+    control: { layout: 1, gap: 0.6,  plat: 2.9, platA: 1, traces: 0, vias: 0.35, heat: 0.3,  cool: 1, pulse: 1, yaw: 36, float: 0, mm: 0, um: 0 }
+  };
+  const KEYS = Object.keys(S.hero).concat(['vx', 'vy', 'vw', 'vh']);
+  const mix = (a, b, f) => { const o = {}; for (const k of KEYS) o[k] = a[k] + (b[k] - a[k]) * f; return o; };
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const smooth = v => v * v * (3 - 2 * v);
+
+  // ---- heat palette: white -> amber -> burnt orange ------------------------
+  const STOPS = [[0, [255, 255, 255]], [0.25, [252, 234, 204]], [0.5, [244, 172, 92]], [0.75, [214, 106, 40]], [1, [160, 54, 22]]];
+  const heat = t => {
+    t = clamp01(t);
+    for (let i = 1; i < STOPS.length; i++) {
+      if (t <= STOPS[i][0]) {
+        const [t0, c0] = STOPS[i - 1], [t1, c1] = STOPS[i], f = (t - t0) / (t1 - t0);
+        return 'rgb(' + c0.map((c, j) => Math.round(c + (c1[j] - c) * f)).join(',') + ')';
+      }
+    }
+    return 'rgb(160,54,22)';
+  };
+  const tint = (base, t) => {
+    if (t <= 0.001) return '#' + base;
+    const m = heat(t).match(/\d+/g).map(Number);
+    const b = base.match(/\w\w/g).map(h => parseInt(h, 16));
+    const f = Math.min(0.75, t);
+    return 'rgb(' + b.map((c, j) => Math.round(c + (m[j] - c) * f)).join(',') + ')';
+  };
+
+  // ---- die floorplan, local coordinates in [-1, 1] ------------------------
+  const BLOCKS = [[-0.86, -0.86, -0.06, -0.14], [0.06, -0.86, 0.86, -0.46], [0.06, -0.36, 0.86, 0.16],
+                  [-0.86, -0.04, -0.3, 0.86], [-0.2, -0.04, 0.36, 0.86], [0.46, 0.26, 0.86, 0.86]];
+  const ROUND = (r, cx, cyy, n = 36) => {               // superellipse, a softened square
+    const out = [];
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * Math.PI * 2, c = Math.cos(a), s = Math.sin(a);
+      out.push([cx + r * Math.sign(c) * Math.pow(Math.abs(c), 0.5), cyy + r * Math.sign(s) * Math.pow(Math.abs(s), 0.5)]);
+    }
+    return out;
+  };
+  const BANDS = [ROUND(0.82, -0.08, -0.1), ROUND(0.56, -0.16, -0.18), ROUND(0.3, -0.24, -0.26)];
+  const RAYS = Array.from({ length: 20 }, (_, k) => {
+    const a = (k / 20) * Math.PI * 2 + 0.08, c = Math.cos(a), s = Math.sin(a), m = Math.max(Math.abs(c), Math.abs(s));
+    return [[c * 0.17, s * 0.17], [c / m * 0.9, s / m * 0.9]];
+  });
+  const INLET = Array.from({ length: 18 }, (_, k) => [Math.cos(k / 18 * Math.PI * 2) * 0.13, Math.sin(k / 18 * Math.PI * 2) * 0.13]);
+
+  // side faces by corner index, with their outward normals
+  const FACES = [[[0, 1, 5, 4], 0, -1], [[1, 2, 6, 5], 1, 0], [[2, 3, 7, 6], 0, 1], [[3, 0, 4, 7], -1, 0]];
+  const SIDE_BASE = { '0,-1': 'DDE4EC', '-1,0': 'EBEFF4', '1,0': 'E3E9F0', '0,1': 'E3E9F0' };
+  const corners = (x, y, z, hx, hy, h) => [
+    [x - hx, y - hy, z], [x + hx, y - hy, z], [x + hx, y + hy, z], [x - hx, y + hy, z],
+    [x - hx, y - hy, z + h], [x + hx, y - hy, z + h], [x + hx, y + hy, z + h], [x - hx, y + hy, z + h]];
+
+  // ---- build persistent SVG nodes ------------------------------------------
+  const gPlat = mk('g', null, svg);
+  const plat = {
+    sides: FACES.map(() => mk('polygon', { class: 'pside' }, gPlat)),
+    top: mk('polygon', { class: 'ptop' }, gPlat),
+    traces: mk('path', { class: 'trace' }, gPlat)
+  };
+  const gDies = mk('g', null, svg);
+  const dies = [0, 1, 2, 3].map(i => {
+    const g = mk('g', null, gDies);
+    return {
+      i, g,
+      vias: mk('path', { class: 'via' }, g),
+      sides: FACES.map(() => mk('polygon', { class: 'side' }, g)),
+      top: mk('polygon', { class: 'top' }, g),
+      bands: BANDS.map(() => mk('polygon', { class: 'band' }, g)),
+      blocks: mk('path', { class: 'blocks' }, g),
+      chan: mk('path', { class: 'chan' }, g),
+      inlet: mk('polygon', { class: 'inlet' }, g)
+    };
+  });
+  const gLbl = mk('g', null, svg);
+  const mmText = mk('text', { class: 'lbl', 'text-anchor': 'middle' }, gLbl); mmText.textContent = 'millimeters';
+  const umLead = mk('path', { class: 'lead' }, gLbl);
+  const umText = mk('text', { class: 'lbl' }, gLbl); umText.textContent = 'micrometers';
+
+  // ---- geometry for a state -------------------------------------------------
+  function place(s, time) {
+    const out = [];
+    for (let i = 0; i < 4; i++) {
+      const li = clamp01((s.layout - i * 0.06) / 0.82);
+      const ez = 1 - Math.pow(1 - li, 2.2), exy = smooth(clamp01((li - 0.05) / 0.95));
+      const [gx, gy] = GRID[i];
+      let z = PT + (i * (H + s.gap)) * ez;
+      if (i > 0) z += s.float * 0.06 * Math.sin(time * 0.9 + i * 0.9);
+      out.push({ x: gx * (1 - exy), y: gy * (1 - exy), z });
+    }
+    return out;
+  }
+
+  // frame each state on its own; the drawn view eases between frames
+  for (const k in S) {
+    const s = S[k];
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const dy of [-8, 0, 8]) {
+      setYaw(s.yaw + dy);
+      const boxes = place(s, 0).map(d => corners(d.x, d.y, d.z, HS, HS, H + 0.1));
+      if (s.platA > 0) boxes.push(corners(0, 0, 0, s.plat, s.plat, PT));
+      for (const bx of boxes) for (const c of bx) {
+        const [px, py] = P(...c);
+        x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+      }
+    }
+    const pad = 0.9 + (x1 - x0) * 0.04;
+    s.vx = (x0 + x1) / 2; s.vy = (y0 + y1) / 2 + 0.25;
+    s.vw = x1 - x0 + 2 * pad; s.vh = y1 - y0 + 2 * pad + 0.6;
+    if (s.um > 0) { s.vw += 2.2; s.vx += 1.1; }          // room for the micrometers label
+    if (s.mm > 0) { s.vh += 0.9; s.vy += 0.45; }         // and the millimeters label
+  }
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+  // ---- draw one frame -------------------------------------------------------
+  let lastOrder = '';
+  let flowT = 0;
+  function draw(s, time) {
+    svg.setAttribute('viewBox', [s.vx - s.vw / 2, s.vy - s.vh / 2, s.vw, s.vh].map(v => v.toFixed(3)).join(' '));
+    setYaw(s.yaw + (reduce ? 0 : s.float * 7 * Math.sin(time * 0.22)));
+    const pos = place(s, reduce ? 0 : time);
+    const phase = 0.5 + 0.5 * Math.sin(time * 1.25);              // power schedule
+    const heatNow = s.heat * (1 + s.pulse * 0.8 * (phase - 0.5));
+
+    // platform
+    const pc = corners(0, 0, 0, s.plat, s.plat, PT);
+    gPlat.style.opacity = s.platA.toFixed(3);
+    FACES.forEach(([idx, nx, ny], k) => {
+      const vis = (nx * sy + ny * cy) < 0;
+      const el = plat.sides[k];
+      el.style.display = vis ? '' : 'none';
+      if (vis) { el.setAttribute('points', poly(idx.map(j => P(...pc[j])))); el.style.fill = '#' + SIDE_BASE[nx + ',' + ny]; }
+    });
+    plat.top.setAttribute('points', poly([4, 5, 6, 7].map(j => P(...pc[j]))));
+
+    // copper channels on the platform: a ring bus plus links between neighbours
+    if (s.traces > 0.01) {
+      const z = PT + 0.002, R = Math.min(4.85, s.plat - 0.35), L = [];
+      const seg = (a, b) => L.push('M' + fmt(P(a[0], a[1], z)) + 'L' + fmt(P(b[0], b[1], z)));
+      seg([-R, -R], [R, -R]); seg([R, -R], [R, R]); seg([R, R], [-R, R]); seg([-R, R], [-R, -R]);
+      for (const g of GRID) {
+        seg([g[0], Math.sign(g[1]) * 4.45], [g[0], Math.sign(g[1]) * R]);
+        seg([Math.sign(g[0]) * 4.45, g[1]], [Math.sign(g[0]) * R, g[1]]);
+      }
+      for (const off of [-0.6, 0.6]) {
+        seg([-0.45, -2.45 + off], [0.45, -2.45 + off]); seg([-0.45, 2.45 + off], [0.45, 2.45 + off]);
+        seg([-2.45 + off, -0.45], [-2.45 + off, 0.45]); seg([2.45 + off, -0.45], [2.45 + off, 0.45]);
+      }
+      plat.traces.setAttribute('d', L.join(''));
+      plat.traces.style.opacity = s.traces.toFixed(3);
+      plat.traces.style.strokeDashoffset = (-flowT * 0.9).toFixed(3);
+      plat.traces.style.display = '';
+    } else plat.traces.style.display = 'none';
+
+    // dies, back to front
+    const order = dies.map(d => d.i).sort((a, b) =>
+      depth(pos[a].x, pos[a].y, pos[a].z + H / 2) - depth(pos[b].x, pos[b].y, pos[b].z + H / 2));
+    const key = order.join('');
+    if (key !== lastOrder) { order.forEach(i => gDies.appendChild(dies[i].g)); lastOrder = key; }
+
+    for (const d of dies) {
+      const { x, y, z } = pos[d.i];
+      const t = LAYER_T[d.i] * heatNow;
+      const c = corners(x, y, z, HS, HS, H);
+      const zt = z + H + 0.002;
+      const T = (u, v) => P(x + u * HS, y + v * HS, zt);
+
+      FACES.forEach(([idx, nx, ny], k) => {
+        const vis = (nx * sy + ny * cy) < 0;
+        const el = d.sides[k];
+        el.style.display = vis ? '' : 'none';
+        if (vis) { el.setAttribute('points', poly(idx.map(j => P(...c[j])))); el.style.fill = tint(SIDE_BASE[nx + ',' + ny], t * 0.7); }
+      });
+      d.top.setAttribute('points', poly([4, 5, 6, 7].map(j => P(...c[j]))));
+      d.top.style.fill = heat(t * 0.32);
+
+      BANDS.forEach((b, k) => {
+        const el = d.bands[k];
+        if (t < 0.02) { el.style.display = 'none'; return; }
+        el.style.display = '';
+        el.setAttribute('points', poly(b.map(([u, v]) => T(u, v))));
+        el.style.fill = heat(t * [0.52, 0.74, 0.95][k]);
+      });
+
+      d.blocks.setAttribute('d', BLOCKS.map(([u0, v0, u1, v1]) =>
+        'M' + fmt(T(u0, v0)) + 'L' + fmt(T(u1, v0)) + 'L' + fmt(T(u1, v1)) + 'L' + fmt(T(u0, v1)) + 'Z').join(''));
+
+      if (s.cool > 0.01) {
+        d.chan.setAttribute('d', RAYS.map(([a, b]) => 'M' + fmt(T(...a)) + 'L' + fmt(T(...b))).join(''));
+        d.chan.style.opacity = (s.cool * (0.85 + 0.15 * s.pulse * Math.sin(time * 1.25 + 0.9))).toFixed(3);
+        d.chan.style.strokeDashoffset = (-flowT * (0.55 + 0.5 * s.pulse * (0.5 + 0.5 * Math.sin(time * 1.25 + 0.9)))).toFixed(3);
+        d.inlet.setAttribute('points', poly(INLET.map(([u, v]) => T(u, v))));
+        d.inlet.style.opacity = s.cool.toFixed(3);
+        d.chan.style.display = d.inlet.style.display = '';
+      } else d.chan.style.display = d.inlet.style.display = 'none';
+
+      // vertical links to the die below
+      if (d.i > 0 && s.vias > 0.01) {
+        const below = pos[d.i - 1], zb = below.z + H, za = z;
+        const L = [];
+        for (const u of [-0.55, 0, 0.55]) for (const v of [-0.55, 0, 0.55])
+          L.push('M' + fmt(P(x + u * HS, y + v * HS, zb)) + 'L' + fmt(P(below.x + u * HS, below.y + v * HS, za)));
+        d.vias.setAttribute('d', L.join(''));
+        d.vias.style.opacity = (s.vias * clamp01((za - zb) / 0.08)).toFixed(3);
+        d.vias.style.display = '';
+      } else d.vias.style.display = 'none';
+    }
+
+    // labels
+    mmText.style.opacity = s.mm.toFixed(3);
+    if (s.mm > 0.01) {
+      const p = P(-s.plat, -s.plat, 0), q = P(s.plat, -s.plat, 0);
+      mmText.setAttribute('x', ((p[0] + q[0]) / 2 + 0.35).toFixed(3));
+      mmText.setAttribute('y', ((p[1] + q[1]) / 2 + 0.95).toFixed(3));
+    }
+    umText.style.opacity = umLead.style.opacity = s.um.toFixed(3);
+    if (s.um > 0.01) {
+      const zg = pos[1].z + H + 0.5 * (pos[2].z - pos[1].z - H);
+      const a = P(pos[1].x + HS, pos[1].y - HS, zg);
+      const b = [a[0] + 0.55, a[1] - 0.4];
+      umLead.setAttribute('d', 'M' + fmt(a) + 'L' + fmt(b) + 'L' + fmt([b[0] + 0.35, b[1]]));
+      umText.setAttribute('x', (b[0] + 0.45).toFixed(3));
+      umText.setAttribute('y', (b[1] + 0.12).toFixed(3));
+    }
+  }
+
+  // ---- scroll -> state ------------------------------------------------------
+  const steps = [...document.querySelectorAll('.step')];
+  const states = steps.map(el => S[el.dataset.state]);
+  const narrow = () => innerWidth <= 820;
+  const readLine = () => innerHeight * (narrow() ? 0.7 : 0.5);
+
+  function progress() {
+    const line = readLine();
+    const mid = steps.map(el => { const r = el.getBoundingClientRect(); return r.top + Math.min(r.height, innerHeight) / 2; });
+    if (line <= mid[0]) return 0;
+    for (let k = 0; k < mid.length - 1; k++)
+      if (line <= mid[k + 1]) return k + (line - mid[k]) / (mid[k + 1] - mid[k]);
+    return mid.length - 1;
+  }
+
+  let active = -1;
+  function stateAt(p) {
+    const k = Math.min(Math.floor(p), states.length - 1);
+    const f = smooth(clamp01((p - k - 0.2) / 0.6));
+    const idx = Math.round(p);
+    if (idx !== active) { steps.forEach((el, j) => el.classList.toggle('is-active', j === idx)); active = idx; }
+    return k >= states.length - 1 ? states[states.length - 1] : mix(states[k], states[k + 1], f);
+  }
+
+  // ?p=N jumps straight to a step (used for previews)
+  const q = new URLSearchParams(location.search).get('p');
+  if (q !== null) {
+    const el = steps[Math.max(0, Math.min(steps.length - 1, +q))];
+    addEventListener('load', () => {
+      const r = el.getBoundingClientRect();
+      scrollTo(0, scrollY + r.top + Math.min(r.height, innerHeight) / 2 - readLine());
+    });
+  }
+
+  let t0 = performance.now(), last = t0;
+  function frame(now) {
+    const time = reduce ? 0 : (now - t0) / 1000;
+    if (!reduce) flowT += (now - last) / 1000;
+    last = now;
+    draw(stateAt(progress()), time);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
 </body>
 </html>
