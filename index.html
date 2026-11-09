@@ -158,106 +158,8 @@
 
   .nb { white-space: nowrap; }
 
-  /* ---- co-design loop ---------------------------------------------------- */
-  .loop {
-    padding: clamp(5rem, 14vh, 8rem) clamp(1.25rem, 5vw, 3rem) clamp(3rem, 8vh, 5rem);
-    text-align: center;
-  }
-
-  .loop h2 {
-    margin: 0 auto clamp(2.8rem, 7vh, 4rem);
-    max-width: 34rem;
-    font: italic 400 clamp(2rem, 3.6vw, 3rem)/1.08 var(--serif);
-    color: var(--navy);
-    text-wrap: balance;
-  }
-
-  .flow {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr auto 1fr;
-    align-items: center;
-    gap: clamp(0.5rem, 2vw, 1.4rem);
-    max-width: 46rem;
-    margin: 0 auto;
-    padding-bottom: 3.2rem;
-  }
-
-  .node {
-    padding: 1.15rem 0.6rem 1.05rem;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: #fff;
-  }
-
-  .node .tag {
-    display: block;
-    font: 400 0.66rem/1.4 var(--sans);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--slate);
-  }
-
-  .node .name {
-    display: block;
-    margin-top: 0.3rem;
-    font: italic 400 clamp(1.6rem, 3vw, 2.1rem)/1 var(--serif);
-    color: var(--navy);
-  }
-
-  .node.hw { border-color: rgba(180, 83, 9, 0.35); }
-  .node.hw .name { color: var(--accent); }
-
-  .arrow {
-    width: clamp(1.2rem, 3vw, 2.4rem);
-    height: 1px;
-    background: var(--slate);
-    position: relative;
-    opacity: 0.6;
-  }
-
-  .arrow::after {
-    content: "";
-    position: absolute;
-    right: -1px; top: -3px;
-    border-left: 6px solid var(--slate);
-    border-top: 3.5px solid transparent;
-    border-bottom: 3.5px solid transparent;
-  }
-
-  /* return path from the chip back to EDA */
-  .return {
-    position: absolute;
-    left: 16.5%; right: 16.5%;
-    bottom: 0.9rem;
-    height: 1.6rem;
-    border: 1px solid rgba(180, 83, 9, 0.55);
-    border-top: none;
-    border-radius: 0 0 8px 8px;
-  }
-
-  .return::before {
-    content: "";
-    position: absolute;
-    left: -4px; top: -6px;
-    border-bottom: 6px solid rgba(180, 83, 9, 0.75);
-    border-left: 3.5px solid transparent;
-    border-right: 3.5px solid transparent;
-  }
-
-  .return span {
-    position: absolute;
-    left: 50%; bottom: -0.6rem;
-    transform: translateX(-50%);
-    padding: 0 0.5rem;
-    background: var(--paper);
-    font: 400 0.72rem/1.2 var(--sans);
-    letter-spacing: 0.08em;
-    color: var(--accent);
-  }
-
   footer {
-    padding: 2.5rem clamp(1.25rem, 5vw, 3rem) clamp(2rem, 6vh, 3rem);
+    padding: 4rem clamp(1.25rem, 5vw, 3rem) clamp(2rem, 6vh, 3rem);
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -301,7 +203,7 @@
       background: linear-gradient(var(--paper) 88%, rgba(252, 252, 251, 0));
     }
 
-    .steps { padding: 0 1.4rem; }
+    .steps { padding: 0 1.4rem 22vh; }
 
     .step {
       min-height: 72vh;
@@ -312,9 +214,6 @@
 
     .hero { min-height: 40vh !important; min-height: 40svh !important; }
 
-    .flow { grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0.4rem; }
-    .node { padding: 0.9rem 0.3rem 0.85rem; }
-    .node .tag { font-size: 0.56rem; letter-spacing: 0.1em; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -376,16 +275,6 @@
     </div>
   </div>
 
-  <section class="loop">
-    <div class="flow">
-      <div class="node"><span class="tag">software</span><span class="name">EDA</span></div>
-      <span class="arrow" aria-hidden="true"></span>
-      <div class="node"><span class="tag">software and hardware</span><span class="name">IP</span></div>
-      <span class="arrow" aria-hidden="true"></span>
-      <div class="node hw"><span class="tag">hardware</span><span class="name">3D chip</span></div>
-      <div class="return" aria-hidden="true"><span>data</span></div>
-    </div>
-  </section>
 </main>
 
 <footer>
