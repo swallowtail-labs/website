@@ -45,7 +45,6 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ---- bar --------------------------------------------------------------- */
   .bar {
     position: fixed;
     inset: 0 0 auto 0;
@@ -79,7 +78,6 @@
 
   .mail:hover { color: var(--navy); }
 
-  /* ---- pinned scene ------------------------------------------------------ */
   .scene { position: relative; height: calc(var(--steps, 7) * 100vh); height: calc(var(--steps, 7) * 100svh); }
 
   .pin {
@@ -205,7 +203,6 @@
     color: var(--mute);
   }
 
-  /* labels pinned to points on the chip */
   .tag3d {
     position: absolute;
     left: 0; top: 0;
@@ -296,46 +293,42 @@
         </div>
         <div class="cap">
           <h2>Chips today are mostly 2D.</h2>
-          <p>We put them on a platform and connect them through copper channels within that platform.</p>
+          <p>Connected through copper channels in a platform</p>
         </div>
         <div class="cap">
           <h2>3D chips stack them like a tower.</h2>
-          <p>The layers are pasted together, so the wiring shrinks from millimeters to micrometers.</p>
+          <p>Wiring shrinks from millimeters to micrometers</p>
         </div>
         <div class="cap">
           <h2>Moving data costs up to 1000&times; more energy than computing.</h2>
-          <p>So the chip is faster and far more power efficient, and it consumes less area.</p>
-          <div class="bars" aria-hidden="true">
-            <span>compute</span><i><b style="width:0.6%;min-width:2px"></b></i><span class="n">1&times;</span>
-            <span>move data</span><i><b class="hot" style="width:100%"></b></i><span class="n hot">1000&times;</span>
-          </div>
+          <p>So the chip is faster, more power efficient, and smaller</p>
         </div>
         <div class="cap">
           <h2>But there are two bottlenecks.</h2>
           <dl class="pair">
             <dt>heat</dt>
-            <dd>The internal layers have no surface area, so the heat cannot dissipate.
+            <dd>Inner layers have no surface to shed heat
               <span class="bars">
                 <span>side by side</span><i><b style="width:28.8%"></b></i><span class="n">11.0 K</span>
                 <span>stacked</span><i><b class="hot" style="width:100%"></b></i><span class="n hot">38.2 K</span>
               </span>
-              <span class="note">Simulated peak rise (115.4 W, same cold plate)</span>
+              <span class="note">Simulated peak rise</span>
             </dd>
             <dt>design</dt>
-            <dd>In 3D, physics and cooling have to be planned in the loop with the logic.</dd>
+            <dd>Physics and cooling must be planned with the logic</dd>
           </dl>
         </div>
         <div class="cap">
           <h2>We train a model of the physics, then work backwards.</h2>
-          <p>This turns a complex physical problem into a scalable machine learning problem.</p>
+          <p>A complex physics problem becomes a scalable ML problem</p>
         </div>
         <div class="cap">
           <h2>Inverse design</h2>
-          <p>Find the right structure up front, like the chip shape and where the cooling goes.</p>
+          <p>Chip shape and cooling layout</p>
         </div>
         <div class="cap">
           <h2>Inverse control</h2>
-          <p>Plan a schedule over time, like when to push power and when to cool.</p>
+          <p>When to push power, when to cool</p>
         </div>
         <div class="cap"><h2 class="big"><span class="nb">Software-hardware</span> co-design</h2></div>
       </div>
@@ -348,8 +341,6 @@
 <footer>&copy; 2026 Swallowtail Labs, Inc.</footer>
 
 <script>
-/* Scroll position -> story progress, and the caption crossfade.
-   Kept outside the 3D module so the text still works if WebGL does not. */
 (() => {
   const scene = document.querySelector('.scene');
   const caps = [...document.querySelectorAll('.cap')];
@@ -380,7 +371,6 @@
   addEventListener('resize', update);
   update();
 
-  // ?p=N opens the page at step N (for previews)
   const q = new URLSearchParams(location.search).get('p');
   if (q !== null) addEventListener('load', () => {
     const span = scene.offsetHeight - innerHeight;
@@ -415,7 +405,6 @@ if (renderer) {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  // ---- scene, light ---------------------------------------------------------
   const scene = new THREE.Scene();
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -437,13 +426,11 @@ if (renderer) {
 
   const camera = new THREE.PerspectiveCamera(22, 1, 0.1, 300);
 
-  // ---- dimensions (world units, y up) ---------------------------------------
   const HS = 2, H = 0.42, PT = 0.3;
   const GRID = [[-2.45, -2.45], [2.45, -2.45], [-2.45, 2.45], [2.45, 2.45]];
-  const LAYER_T = [1.0, 0.86, 0.62, 0.38];          // bottom tier runs hottest
+  const LAYER_T = [1.0, 0.86, 0.62, 0.38];
   const VIA = [-0.7, -0.42, -0.14, 0.14, 0.42, 0.7];
 
-  // ---- textures -------------------------------------------------------------
   function dieTexture() {
     const S = 1024, c = document.createElement('canvas');
     c.width = c.height = S;
@@ -483,7 +470,6 @@ if (renderer) {
 
   const VERT = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }';
 
-  // heat: a soft hotspot with a warm ramp, drawn over the die top
   const heatMaterial = () => new THREE.ShaderMaterial({
     transparent: true, depthWrite: false,
     uniforms: { uHeat: { value: 0 } },
@@ -509,7 +495,6 @@ if (renderer) {
       }`
   });
 
-  // coolant: radial microchannels from a centre inlet, with flow moving outwards
   const chanMaterial = () => new THREE.ShaderMaterial({
     transparent: true, depthWrite: false,
     uniforms: { uTime: { value: 0 }, uOp: { value: 0 }, uSpeed: { value: 1 } },
@@ -535,28 +520,24 @@ if (renderer) {
       }`
   });
 
-  // ---- objects ----------------------------------------------------------------
   const world = new THREE.Group();
   scene.add(world);
 
   const copper = new THREE.MeshStandardMaterial({ color: 0xC47A40, metalness: 0.85, roughness: 0.32 });
   const traceMat = new THREE.MeshStandardMaterial({ color: 0xC47A40, metalness: 0.8, roughness: 0.35, transparent: true });
 
-  // ground shadow
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({ map: softShadowTexture(), transparent: true, depthWrite: false }));
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.002;
   world.add(ground);
 
-  // platform
   const platMat = new THREE.MeshStandardMaterial({ color: 0xDFE4EA, roughness: 0.9, metalness: 0.0, transparent: true });
   const platform = new THREE.Mesh(new RoundedBoxGeometry(1, PT, 1, 3, 0.06), platMat);
   platform.receiveShadow = true;
   platform.position.y = PT / 2;
   world.add(platform);
 
-  // copper channels on the platform: a ring bus with stubs, and links between neighbours
   const traces = new THREE.Group();
   world.add(traces);
   const traceBox = new THREE.BoxGeometry(1, 0.02, 0.07);
@@ -578,12 +559,11 @@ if (renderer) {
     seg(-2.45 + off, -0.45, -2.45 + off, 0.45); seg(2.45 + off, -0.45, 2.45 + off, 0.45);
   }
 
-  // data pulses travelling round the ring bus
   const PULSES = 14;
   const pulseMat = new THREE.MeshBasicMaterial({ color: 0xF0A050, transparent: true });
   const pulses = new THREE.InstancedMesh(new THREE.BoxGeometry(0.34, 0.05, 0.11), pulseMat, PULSES);
   world.add(pulses);
-  const ringPoint = s => {                       // s in [0, 1) round the square ring
+  const ringPoint = s => {
     const L = 8 * R, d = (((s % 1) + 1) % 1) * L;
     if (d < 2 * R) return [-R + d, -R, 0];
     if (d < 4 * R) return [R, -R + (d - 2 * R), Math.PI / 2];
@@ -591,7 +571,6 @@ if (renderer) {
     return [-R, R - (d - 6 * R), Math.PI / 2];
   };
 
-  // dies
   const dieTex = dieTexture();
   const dieGeo = new RoundedBoxGeometry(2 * HS, H, 2 * HS, 4, 0.035);
   const plane = new THREE.PlaneGeometry(2 * HS * 0.985, 2 * HS * 0.985);
@@ -609,14 +588,11 @@ if (renderer) {
     return { mesh, side, heat, chan };
   });
 
-  // vertical links between neighbouring dies
   const VIAS = 3 * VIA.length * VIA.length;
   const vias = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.028, 0.028, 1, 10), copper, VIAS);
   vias.castShadow = true;
   world.add(vias);
 
-  // ---- states, one per caption ----------------------------------------------------
-  // layout 0 = four dies side by side, 1 = stacked; ew/eh = world extent to frame; ty = camera target height
   const S = [
     { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, ty: 2.45 },
     { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 32, sway: 0, ew: 18.0, eh: 7.4, ty: 0.25 },
@@ -638,7 +614,6 @@ if (renderer) {
     return mix(S[k], S[k + 1], smooth(clamp01((p - k - 0.18) / 0.64)));
   };
 
-  // ---- size -------------------------------------------------------------------
   let W = 1, Hpx = 1, narrow = false;
   function resize() {
     W = pin.clientWidth; Hpx = pin.clientHeight; narrow = W <= 820;
@@ -648,7 +623,6 @@ if (renderer) {
   addEventListener('resize', resize);
   resize();
 
-  // ---- labels ------------------------------------------------------------------
   const tagMM = document.getElementById('tag-mm'), tagUM = document.getElementById('tag-um');
   const v3 = new THREE.Vector3();
   const placeTag = (el, x, y, z, op) => {
@@ -658,7 +632,6 @@ if (renderer) {
     el.style.transform = 'translate(' + ((v3.x + 1) / 2 * W).toFixed(1) + 'px,' + ((1 - v3.y) / 2 * Hpx - 6).toFixed(1) + 'px)';
   };
 
-  // ---- frame ---------------------------------------------------------------------
   const m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion(), p3 = new THREE.Vector3(), s3 = new THREE.Vector3();
   const up = new THREE.Vector3(0, 1, 0);
   let flow = 0, last = performance.now();
@@ -670,7 +643,6 @@ if (renderer) {
     if (!reduce) flow += dt;
     const s = stateAt(STW.progress());
 
-    // camera: frame the state's extent inside the area the captions leave free
     const fw = narrow ? 0.94 : 0.5, fh = narrow ? 0.52 : 0.8;
     const cx = narrow ? 0.5 : 0.69, cy = narrow ? 0.33 : 0.5;
     const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
@@ -683,7 +655,6 @@ if (renderer) {
     camera.setViewOffset(W, Hpx, (0.5 - cx) * W, (0.5 - cy) * Hpx, W, Hpx);
     camera.updateProjectionMatrix();
 
-    // dies
     const phase = 0.5 + 0.5 * Math.sin(time * 1.2);
     const heatNow = s.heat * (1 + s.pulse * 0.75 * (phase - 0.5));
     const pos = [];
@@ -708,7 +679,6 @@ if (renderer) {
       d.chan.visible = s.cool > 0.01;
     });
 
-    // vias between neighbouring dies
     let n = 0;
     for (let i = 1; i < 4; i++) {
       const a = pos[i - 1], b = pos[i];
@@ -723,7 +693,6 @@ if (renderer) {
     vias.instanceMatrix.needsUpdate = true;
     vias.visible = s.vias > 0.02;
 
-    // platform, copper channels, data pulses, ground shadow
     platform.scale.set(2 * s.plat, 1, 2 * s.plat);
     platMat.opacity = s.platA;
     platform.visible = s.platA > 0.02;
@@ -744,7 +713,6 @@ if (renderer) {
     const gs = s.platA > 0.5 ? 2 * s.plat * 1.55 : 9.5;
     ground.scale.set(gs, gs, 1);
 
-    // labels
     placeTag(tagMM, s.plat * 0.35, 0, s.plat + 0.8, s.traces);
     const um = !narrow && s.layout > 0.9 && s.heat < 0.05 ? clamp01(1 - Math.abs(s.gap - 0.1) * 4) : 0;
     placeTag(tagUM, HS + 0.08, pos[1][1] + H + s.gap / 2, -HS - 0.08, um);
