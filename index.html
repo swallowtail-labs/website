@@ -70,8 +70,9 @@
   .brand span { font: 500 0.78rem/1 var(--sans); letter-spacing: 0.26em; }
 
   .mail {
-    font: 400 0.78rem/1 var(--sans);
-    letter-spacing: 0.02em;
+    display: inline-flex;
+    padding: 0.35rem;
+    margin: -0.35rem;
     color: var(--slate);
     transition: color 0.2s ease;
   }
@@ -133,6 +134,12 @@
     letter-spacing: -0.032em;
   }
 
+  .cap h2.big {
+    font-size: clamp(2.5rem, 4.4vw, 4.25rem);
+    line-height: 1.04;
+    letter-spacing: -0.038em;
+  }
+
   .cap p {
     margin: 0.9rem 0 0;
     font-size: 1rem;
@@ -141,8 +148,31 @@
 
   .nb { white-space: nowrap; }
 
+  .pair {
+    margin: 1.3rem 0 0;
+    display: grid;
+    grid-template-columns: 4.2rem 1fr;
+    gap: 0.9rem 1rem;
+  }
+
+  .pair dt {
+    padding-top: 0.22rem;
+    font: 400 0.7rem/1.4 var(--mono);
+    letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+
+  .pair dd {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--slate);
+  }
+
+  .pair .bars { margin-top: 1rem; }
+  .pair .note { display: block; }
+
   .bars {
-    margin-top: 1.7rem;
+    margin-top: 1.5rem;
     display: grid;
     grid-template-columns: max-content 1fr max-content;
     align-items: center;
@@ -170,9 +200,9 @@
   .bars .n.hot { color: var(--accent); }
 
   .note {
-    margin-top: 0.9rem !important;
-    font: 400 0.7rem/1.4 var(--mono) !important;
-    color: var(--mute) !important;
+    margin-top: 0.8rem;
+    font: 400 0.68rem/1.4 var(--mono);
+    color: var(--mute);
   }
 
   /* labels pinned to points on the chip */
@@ -237,8 +267,8 @@
     .cap { align-self: end; }
     .cap h1 { font-size: clamp(2.1rem, 9vw, 2.8rem); }
     .cap h2 { font-size: clamp(1.6rem, 7vw, 2.1rem); }
+    .cap h2.big { font-size: clamp(2.1rem, 9vw, 2.8rem); }
     .cue { display: none; }
-    .mail { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -250,7 +280,7 @@
 
 <header class="bar">
   <a class="brand" href="/"><img src="swallowtail-mark.svg" alt="" width="22" height="22"><span>SWALLOWTAIL</span></a>
-  <a class="mail" href="mailto:thomas@swallowtaillabs.com">thomas@swallowtaillabs.com</a>
+  <a class="mail" href="mailto:thomas@swallowtaillabs.com" aria-label="Email" title="Email"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6.2L20.5 7"/></svg></a>
 </header>
 
 <main>
@@ -262,27 +292,52 @@
 
       <div class="captions">
         <div class="cap">
-          <h1><span class="nb">software-hardware</span> <span class="nb">co-design</span> that makes 3D chips possible</h1>
+          <h1>Make <span class="nb">3D chips</span> possible.</h1>
         </div>
-        <div class="cap"><h2>Chips today are mostly 2D.</h2></div>
-        <div class="cap"><h2>3D chips stack them like a tower.</h2></div>
+        <div class="cap">
+          <h2>Chips today are mostly 2D.</h2>
+          <p>We put them on a platform and connect them through copper channels within that platform.</p>
+        </div>
+        <div class="cap">
+          <h2>3D chips stack them like a tower.</h2>
+          <p>The layers are pasted together, so the wiring shrinks from millimeters to micrometers.</p>
+        </div>
         <div class="cap">
           <h2>Moving data costs up to 1000&times; more energy than computing.</h2>
+          <p>So the chip is faster and far more power efficient, and it consumes less area.</p>
           <div class="bars" aria-hidden="true">
             <span>compute</span><i><b style="width:0.6%;min-width:2px"></b></i><span class="n">1&times;</span>
             <span>move data</span><i><b class="hot" style="width:100%"></b></i><span class="n hot">1000&times;</span>
           </div>
         </div>
         <div class="cap">
-          <h2>Heat cannot escape.</h2>
-          <div class="bars">
-            <span>side by side</span><i><b style="width:28.8%"></b></i><span class="n">11.0 K</span>
-            <span>stacked</span><i><b class="hot" style="width:100%"></b></i><span class="n hot">38.2 K</span>
-          </div>
-          <p class="note">Simulated peak rise (115.4 W, same cold plate)</p>
+          <h2>But there are two bottlenecks.</h2>
+          <dl class="pair">
+            <dt>heat</dt>
+            <dd>The internal layers have no surface area, so the heat cannot dissipate.
+              <span class="bars">
+                <span>side by side</span><i><b style="width:28.8%"></b></i><span class="n">11.0 K</span>
+                <span>stacked</span><i><b class="hot" style="width:100%"></b></i><span class="n hot">38.2 K</span>
+              </span>
+              <span class="note">Simulated peak rise (115.4 W, same cold plate)</span>
+            </dd>
+            <dt>design</dt>
+            <dd>In 3D, physics and cooling have to be planned in the loop with the logic.</dd>
+          </dl>
         </div>
-        <div class="cap"><h2>Inverse design</h2><p>Chip shape and cooling layout</p></div>
-        <div class="cap"><h2>Inverse control</h2><p>When to push power, when to cool</p></div>
+        <div class="cap">
+          <h2>We train a model of the physics, then work backwards.</h2>
+          <p>This turns a complex physical problem into a scalable machine learning problem.</p>
+        </div>
+        <div class="cap">
+          <h2>Inverse design</h2>
+          <p>Find the right structure up front, like the chip shape and where the cooling goes.</p>
+        </div>
+        <div class="cap">
+          <h2>Inverse control</h2>
+          <p>Plan a schedule over time, like when to push power and when to cool.</p>
+        </div>
+        <div class="cap"><h2 class="big"><span class="nb">Software-hardware</span> co-design</h2></div>
       </div>
 
       <span class="cue" aria-hidden="true"></span>
@@ -568,8 +623,10 @@ if (renderer) {
     { layout: 1, gap: 0.1,  plat: 2.7, platA: 1, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 44, sway: 0, ew: 10.0, eh: 5.4, ty: 1.0 },
     { layout: 1, gap: 0.1,  plat: 2.7, platA: 1, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 54, sway: 0, ew: 10.0, eh: 5.4, ty: 1.0 },
     { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 1,   cool: 0, pulse: 0, yaw: 40, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 },
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.9, cool: 0, pulse: 0, yaw: 22, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 },
     { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.3, cool: 1, pulse: 0, yaw: 32, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 },
-    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.3, cool: 1, pulse: 1, yaw: 26, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 }
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.3, cool: 1, pulse: 1, yaw: 26, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 },
+    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0.2, cool: 1, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, ty: 2.45 }
   ];
   const KEYS = Object.keys(S[0]);
   const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -689,7 +746,7 @@ if (renderer) {
 
     // labels
     placeTag(tagMM, s.plat * 0.35, 0, s.plat + 0.8, s.traces);
-    const um = s.layout > 0.9 && s.heat < 0.05 ? clamp01(1 - Math.abs(s.gap - 0.1) * 4) : 0;
+    const um = !narrow && s.layout > 0.9 && s.heat < 0.05 ? clamp01(1 - Math.abs(s.gap - 0.1) * 4) : 0;
     placeTag(tagUM, HS + 0.08, pos[1][1] + H + s.gap / 2, -HS - 0.08, um);
 
     renderer.render(scene, camera);
