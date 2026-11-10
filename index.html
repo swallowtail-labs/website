@@ -4,144 +4,824 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Swallowtail</title>
-<meta name="description" content="Swallowtail designs software and hardware to make 3D chips possible: inverse solving for heat and design in stacked dies.">
+<meta name="description" content="Software-hardware co-design that makes 3D chips possible.">
+<link rel="icon" href="swallowtail-mark.svg" type="image/svg+xml">
 <meta property="og:title" content="Swallowtail">
-<meta property="og:description" content="We design software and hardware to make 3D chips possible.">
+<meta property="og:description" content="Software-hardware co-design that makes 3D chips possible.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://swallowtaillabs.com/">
-<meta name="theme-color" content="#060708">
-<link rel="icon" href="swallowtail-mark.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@200;300;400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-<script>/* choose presentation mode before first paint: landscape and >= 700px wide plays as full-screen scenes */
-(function(){var d=document.documentElement;function m(){var on=innerWidth>=700&&innerWidth>innerHeight;d.classList.toggle("deck",on);d.classList.toggle("stack",!on);}m();addEventListener("resize",m);})();</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+<style>
+  :root {
+    --paper:  #05070A;
+    --ink:    #F2F4F7;
+    --slate:  #A7B1BE;
+    --mute:   #66717F;
+    --navy:   #DCE6F2;
+    --rule:   #232B36;
+    --accent: #F2803A;
+    --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --pad:  clamp(1.25rem, 4.5vw, 4rem);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; font-size: clamp(16px, 1.12vw, 26px); }
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 300 16px/1.6 var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .bar {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(1rem, 2.6vw, 1.6rem) var(--pad);
+    pointer-events: none;
+  }
+
+  .bar a { pointer-events: auto; text-decoration: none; }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--navy);
+  }
+
+  .brand img { width: 22px; height: auto; }
+  .brand span { font: 500 0.78rem/1 var(--sans); letter-spacing: 0.26em; }
+
+  .mail {
+    display: inline-flex;
+    padding: 0.35rem;
+    margin: -0.35rem;
+    color: var(--slate);
+    transition: color 0.2s ease;
+  }
+
+  .mail:hover { color: var(--navy); }
+
+  .scene { position: relative; height: 100vh; height: 100svh; }
+
+  .pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  #gl {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .captions {
+    position: absolute;
+    left: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+    width: min(34rem, 42vw);
+    display: grid;
+    pointer-events: none;
+  }
+
+  .cap {
+    grid-area: 1 / 1;
+    align-self: center;
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+
+  .cap h1, .cap h2 {
+    margin: 0;
+    font-weight: 300;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .cap h1 {
+    font-size: clamp(2.5rem, 5.4vw, 6.2rem);
+    line-height: 1.04;
+    letter-spacing: -0.038em;
+  }
+
+  .cap h2 {
+    font-size: clamp(1.9rem, 3.5vw, 4rem);
+    line-height: 1.08;
+    letter-spacing: -0.032em;
+  }
+
+  .cap h2.big {
+    font-size: clamp(2.5rem, 5.4vw, 6.2rem);
+    line-height: 1.04;
+    letter-spacing: -0.038em;
+  }
+
+  .cap p {
+    margin: 1.1rem 0 0;
+    font-size: 1.15rem;
+    color: var(--slate);
+  }
+
+  .nb { white-space: nowrap; }
+
+  .pair {
+    margin: 1.3rem 0 0;
+    display: grid;
+    grid-template-columns: 4.2rem 1fr;
+    gap: 0.9rem 1rem;
+  }
+
+  .pair dt {
+    padding-top: 0.22rem;
+    font: 400 0.7rem/1.4 var(--mono);
+    letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+
+  .pair dd {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--slate);
+  }
+
+  .pair .bars { margin-top: 1rem; }
+  .pair .note { display: block; }
+
+  .bars {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: max-content 1fr max-content;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    max-width: 24rem;
+    font: 400 0.74rem/1 var(--mono);
+    color: var(--slate);
+  }
+
+  .bars i {
+    display: block;
+    height: 2px;
+    background: var(--rule);
+    position: relative;
+  }
+
+  .bars i b {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--navy);
+  }
+
+  .bars i b.hot { background: var(--accent); }
+  .bars .n { color: var(--ink); text-align: right; }
+  .bars .n.hot { color: var(--accent); }
+
+  .note {
+    margin-top: 0.8rem;
+    font: 400 0.68rem/1.4 var(--mono);
+    color: var(--mute);
+  }
+
+  .tag3d {
+    position: absolute;
+    left: 0; top: 0;
+    font: 400 0.7rem/1 var(--mono);
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    padding-left: 1.6rem;
+  }
+
+  .tag3d::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 50%;
+    width: 1.2rem;
+    border-top: 1px solid currentColor;
+    opacity: 0.6;
+  }
+
+  .cue {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1.4rem, 4vh, 2.4rem);
+    width: 1px;
+    height: 38px;
+    background: linear-gradient(var(--mute), transparent);
+    transform-origin: top;
+    animation: cue 2.4s ease-in-out infinite;
+  }
+
+  @keyframes cue {
+    0%   { transform: scaleY(0); opacity: 0; }
+    30%  { opacity: 1; }
+    70%  { transform: scaleY(1); opacity: 1; }
+    100% { transform: scaleY(1); opacity: 0; }
+  }
+
+  footer {
+    padding: 3.5rem var(--pad) 2.4rem;
+    text-align: center;
+    font: 400 0.74rem/1 var(--sans);
+    letter-spacing: 0.02em;
+    color: var(--mute);
+  }
+
+
+  .pin { cursor: pointer; transition: opacity 0.45s ease; }
+  .pin.blink { opacity: 0; }
+  .pin::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(60% 70% at 69% 52%, rgba(70, 110, 160, 0.20), rgba(70, 110, 160, 0) 70%);
+    pointer-events: none;
+  }
+  .wordmark {
+    position: absolute;
+    left: calc(var(--pad) - 0.06em);
+    bottom: -0.24em;
+    margin: 0;
+    font: 300 20.5vw/1 var(--sans);
+    letter-spacing: -0.055em;
+    white-space: nowrap;
+    color: rgba(220, 230, 242, 0.045);
+    pointer-events: none;
+    user-select: none;
+  }
+  .hud {
+    position: fixed;
+    z-index: 10;
+    left: var(--pad);
+    right: var(--pad);
+    bottom: clamp(0.9rem, 2.4vh, 1.6rem);
+    display: grid;
+    grid-template-columns: max-content 1fr max-content;
+    align-items: center;
+    gap: 1.6rem;
+    font: 400 0.62rem/1 var(--mono);
+    letter-spacing: 0.06em;
+    color: var(--mute);
+  }
+  .segs { display: flex; gap: 6px; height: 2px; }
+  .segs b { flex: 1; position: relative; background: var(--rule); overflow: hidden; }
+  .segs b i { position: absolute; inset: 0; background: var(--slate); transform-origin: left; transform: scaleX(0); }
+  .segs b.done i { transform: scaleX(1); }
+  .hud .paused { color: var(--accent); }
+  .cap .reach { margin-top: 1.6rem; font: 400 0.95rem/1 var(--mono); letter-spacing: 0.02em; color: var(--accent); }
+
+  .no-gl #gl { display: none; }
+
+  @media (max-width: 820px) {
+    .captions {
+      top: auto;
+      bottom: max(7svh, 3.2rem);
+      transform: none;
+      width: auto;
+      right: var(--pad);
+    }
+
+    .cap { align-self: end; }
+    .cap h1 { font-size: clamp(2.1rem, 9vw, 2.8rem); }
+    .cap h2 { font-size: clamp(1.6rem, 7vw, 2.1rem); }
+    .cap h2.big { font-size: clamp(2.1rem, 9vw, 2.8rem); }
+    .cue { display: none; }
+    .hud { grid-template-columns: 1fr; }
+    .hud .copy, .hud .keys { display: none; }
+    .wordmark { font-size: 24vw; bottom: auto; top: 4.2rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cue { animation: none; opacity: 0.6; }
+  }
+</style>
 </head>
 <body>
-<header class="nav">
-  <a class="nav-brand" href="#s1" aria-label="Swallowtail, first scene">
-    <img src="swallowtail-mark.svg" alt="" width="24" height="24">
-    <span>Swallowtail</span>
-  </a>
-  <p class="nav-scene mono" id="scene-label" aria-live="polite"></p>
+
+<header class="bar">
+  <a class="brand" href="/"><img src="swallowtail-mark.svg" alt="" width="22" height="22"><span>SWALLOWTAIL</span></a>
+  <a class="mail" href="mailto:thomas@swallowtaillabs.com" aria-label="Email" title="Email"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6.2L20.5 7"/></svg></a>
 </header>
 
-<main id="top">
-  <section class="scene s-hero" id="s1" data-scene="hero" data-title="Swallowtail" data-dur="10">
-    <div class="hero-frame">
-      <canvas id="hero-cv" role="img" aria-label="Simulated temperature field of the bottom die in a four-die stack: peak 54.27 kelvin above coolant, hottest in the middle where the cores sit."></canvas>
-      <div class="hero-scale scale" aria-hidden="true"><div class="scale-bar"></div><div class="scale-ticks"></div></div>
-    </div>
-    <div class="copy">
-      <h1>We design software and hardware to make 3D&nbsp;chips possible.</h1>
-      <p class="hero-note mono" data-demo-label>Live thermograph: the bottom die of a four-die stack, solved in your browser.</p>
-    </div>
-    <div class="wordmark" aria-hidden="true">Swallowtail</div>
-  </section>
+<main>
+  <section class="scene">
+    <div class="pin">
+      <p class="wordmark" aria-hidden="true">Swallowtail</p>
+      <canvas id="gl" aria-label="A 3D chip: four dies stacked into a tower" role="img"></canvas>
+      <span class="tag3d" id="tag-mm">millimeters</span>
+      <span class="tag3d" id="tag-um">micrometers</span>
 
-  <section class="scene s-flat" id="s2" data-scene="flat" data-title="2D" data-dur="11">
-    <div class="copy">
-      <p class="kicker mono">Today</p>
-      <h2>Chips are flat.</h2>
-      <p class="body">Separate dies, wired side by side, millimetres apart. Moving data can cost 1000x more energy than computing on it.</p>
-    </div>
-  </section>
-
-  <section class="scene s-stack" id="s3" data-scene="stack" data-title="3D" data-dur="11">
-    <div class="copy">
-      <p class="kicker mono">3D</p>
-      <h2>Stack them.</h2>
-      <p class="body">Bond the dies directly and the wiring shrinks from millimetres to micrometres. Faster, smaller, more power efficient.</p>
-    </div>
-  </section>
-
-  <section class="scene s-heat" id="s4" data-scene="heat" data-title="Heat" data-dur="12">
-    <div class="copy">
-      <p class="kicker mono">Bottleneck</p>
-      <h2>The heat is trapped.</h2>
-      <p class="body">Inner layers have no surface to shed&nbsp;heat.</p>
-    </div>
-    <figure class="deck-fact">
-      <div class="fact-row">
-        <p class="fact-num"><b>11.0<small>K</small></b><span class="mono">Side by side</span></p>
-        <p class="fact-num hot"><b>38.2<small>K</small></b><span class="mono">Stacked</span></p>
+      <div class="captions">
+        <div class="cap">
+          <h1>Make <span class="nb">3D chips</span> possible.</h1>
+        </div>
+        <div class="cap">
+          <h2>Chips today are mostly 2D.</h2>
+          <p>Connected through copper channels in a platform</p>
+        </div>
+        <div class="cap">
+          <h2>Most of the power is spent moving data through these channels.</h2>
+          <p>Moving data can cost 1000&times; more energy than computing on it</p>
+        </div>
+        <div class="cap">
+          <h2>3D chips stack them like a tower.</h2>
+          <p>Wiring shrinks from millimeters to micrometers, so the chip is faster, more power efficient, and smaller</p>
+        </div>
+        <div class="cap">
+          <h2>But there are two bottlenecks.</h2>
+          <dl class="pair">
+            <dt>heat</dt>
+            <dd>Inner layers have no surface to shed heat
+              <span class="bars">
+                <span>side by side</span><i><b style="width:28.8%"></b></i><span class="n">11.0 K</span>
+                <span>stacked</span><i><b class="hot" style="width:100%"></b></i><span class="n hot">38.2 K</span>
+              </span>
+              <span class="note">Simulated peak rise</span>
+            </dd>
+            <dt>design</dt>
+            <dd>Physics and cooling must be planned with the logic</dd>
+          </dl>
+        </div>
+        <div class="cap">
+          <h2>We train a model of the physics, then work backwards.</h2>
+          <p>A complex physics problem becomes a scalable ML problem</p>
+        </div>
+        <div class="cap">
+          <h2>Inverse solving</h2>
+          <dl class="pair">
+            <dt>design</dt>
+            <dd>Floorplan, tier partitioning, and microchannel layout, at design time</dd>
+            <dt>control</dt>
+            <dd>DVFS and coolant flow, at run time</dd>
+          </dl>
+        </div>
+        <div class="cap"><h2 class="big"><span class="nb">Software-hardware</span> co-design</h2><p class="reach">thomas@swallowtaillabs.com</p></div>
       </div>
-      <div class="fact-strip" aria-hidden="true">
-        <div class="fact-bar"></div>
-        <i style="left:18.33%"></i><i class="hot" style="left:63.67%"></i>
-        <span class="fs-end">0</span><span class="fs-end r">60 K</span>
-      </div>
-      <figcaption class="mono">Simulated peak temperature rise, 115.4 W, same cold plate</figcaption>
-    </figure>
-  </section>
 
-  <section class="scene s-solve" id="s5" data-scene="solve" data-title="Inverse solving" data-dur="26">
-    <div class="copy">
-      <p class="kicker mono">Our approach</p>
-      <h2>Inverse solving.</h2>
-      <p class="body">Design tools never put the physics in the loop. We train a model of the physics, then work backwards from the target to the design.</p>
-      <dl class="uses mono">
-        <div><dt>Design time</dt><dd>floorplan, tier partitioning, microchannels</dd></div>
-        <div><dt>Run time</dt><dd>DVFS, coolant flow</dd></div>
-      </dl>
+      
     </div>
-  </section>
-
-  <div class="stage" id="stage" data-demo>
-    <canvas id="demo-cv" aria-hidden="true"></canvas>
-    <div class="hud hud-ctl" role="group" aria-label="Thermal model controls">
-      <button type="button" class="ctl" data-mode="flat" aria-pressed="true">Side by side</button>
-      <button type="button" class="ctl" data-mode="stack" aria-pressed="false">Stacked</button>
-      <button type="button" class="ctl" data-mode="solve" aria-pressed="false">Inverse solve</button>
-      <button type="button" class="ctl ghost" id="seed-btn" aria-label="Run the inverse solve with the next random seed">Seed <span id="seed">7</span></button>
-    </div>
-    <p class="hud hud-cap mono" id="caption">Side by side: every die sits on the cold plate.</p>
-    <div class="hud hud-scale scale" aria-hidden="true"><div class="scale-bar"></div><div class="scale-ticks"></div><div class="scale-pin" id="pin"><i></i></div></div>
-    <div class="hud hud-spark mono" aria-hidden="true">
-      <canvas id="spark" width="300" height="84"></canvas>
-      <p id="steps">Step 000 / 400 &middot; swaps kept 000</p>
-    </div>
-    <div class="hud hud-peak">
-      <p class="mono peak-label">Peak rise, <span id="peak-where">every tier</span></p>
-      <p class="peak"><span id="peak">9.23</span><small>K</small></p>
-      <p class="mono best" id="best">&nbsp;</p>
-    </div>
-    <p class="hud hud-note mono">Toy thermal model running in your browser. Our models learn the physics so the search scales.</p>
-    <p class="sr-only" id="sr-status" aria-live="polite"></p>
-  </div>
-
-  <section class="scene s-partner" id="s6" data-scene="partner" data-title="Traction" data-dur="12">
-    <p class="kicker mono">In silicon</p>
-    <h2>MediaTek is our prototype&nbsp;partner.</h2>
-    <ul class="ledger">
-      <li>Research partnership. A MediaTek senior director advises&nbsp;weekly.</li>
-      <li>90-minute talk with MediaTek's chairman.</li>
-      <li>MediaTek: $262B, the #4 chip company, behind Google's&nbsp;TPU.</li>
-      <li>Delivering an EDA plug-in, Nov&nbsp;2026.</li>
-      <li>Accepted to The Residency, 0.4%&nbsp;acceptance.</li>
-    </ul>
-  </section>
-
-  <section class="scene s-team" id="s7" data-scene="team" data-title="Team" data-dur="15">
-    <p class="kicker mono">Team</p>
-    <ol class="people">
-      <li><span class="mono who">Founder</span><p class="big">EuPhO national team, bronze.</p><p class="more mono">Hired by a quant firm at 17. ICML and NeurIPS papers since freshman year. Advised by Yann LeCun, Anima Anandkumar and Steven&nbsp;Brunton.</p></li>
-      <li><span class="mono who">Founder</span><p class="big">Anthropic Fellow at 18.</p><p class="more mono">Olympiad physics, then defence tech at 15. University of Bristol AI research at 16. Singapore Government (IMDA) AI research at&nbsp;17.</p></li>
-      <li><span class="mono who">Founder</span><p class="big">Caltech CS PhD under Anima Anandkumar.</p><p class="more mono">China Informatics Olympiad. Tsinghua CS, ranked 7th. Stanford AI research. Amazon research&nbsp;intern.</p></li>
-      <li class="adv"><span class="mono who">Advisor</span><p class="big">Duane Northcutt, inventor of&nbsp;HDMI.</p><p class="more mono">Ex-Sun. Ex-CTO of a chip&nbsp;startup.</p></li>
-    </ol>
-    <a class="mail" id="contact" href="mailto:thomas@swallowtaillabs.com">thomas@swallowtaillabs.com</a>
   </section>
 </main>
 
-<footer class="foot mono">
-  <span>&copy; 2026 Swallowtail Labs, Inc.</span>
-  <span class="keys" aria-hidden="true">&larr; &rarr; scenes &middot; P pause &middot; F full screen</span>
-</footer>
-<div class="progress" aria-hidden="true"><div class="segs" id="segs"></div></div>
+<div class="hud"><span class="copy">&copy; 2026 Swallowtail Labs, Inc.</span><div class="segs" aria-hidden="true"></div><span class="keys">&larr; &rarr; &nbsp;&middot;&nbsp; P pause &nbsp;&middot;&nbsp; F full screen</span></div>
 
-<script src="thermal.js"></script>
-<script src="app.js"></script>
+<script>
+(() => {
+  const pin = document.querySelector('.pin');
+  const caps = [...document.querySelectorAll('.cap')];
+  const N = caps.length;
+  const HOLD = [5, 5.5, 6, 6, 8, 6.5, 7.5, 7];
+  const TR = 2200;
+  const segs = document.querySelector('.segs');
+  const keys = document.querySelector('.hud .keys');
+  const keysText = keys.innerHTML;
+  segs.innerHTML = caps.map(() => '<b><i></i></b>').join('');
+  const bars = [...segs.children];
+
+  let p = 0, from = 0, to = 0, t0 = 0, moving = false, k = 0, paused = false;
+  let start = performance.now();
+  const q = new URLSearchParams(location.search).get('p');
+  if (q !== null) { k = p = from = to = Math.max(0, Math.min(N - 1, Math.round(+q) || 0)); }
+
+  function go(j) {
+    j = ((j % N) + N) % N;
+    if (j === k && !moving) return;
+    if (Math.abs(j - p) > 1.01) {
+      pin.classList.add('blink');
+      k = j;
+      setTimeout(() => { p = from = to = j; moving = false; start = performance.now(); pin.classList.remove('blink'); }, 460);
+      return;
+    }
+    from = p; to = j; k = j; t0 = performance.now(); moving = true; start = t0 + TR;
+  }
+
+  function update(now) {
+    caps.forEach((c, i) => {
+      const d = p - i;
+      const o = Math.max(0, Math.min(1, 1.25 - Math.abs(d) * 2.6));
+      c.style.opacity = o.toFixed(3);
+      c.style.transform = 'translate3d(0,' + (-d * 26).toFixed(1) + 'px,0)';
+      c.style.visibility = o < 0.01 ? 'hidden' : 'visible';
+    });
+    const f = moving ? 0 : Math.max(0, Math.min(1, (now - start) / (HOLD[k] * 1000)));
+    bars.forEach((b, i) => {
+      b.classList.toggle('done', i < k);
+      b.firstChild.style.transform = i === k ? 'scaleX(' + f.toFixed(4) + ')' : '';
+    });
+  }
+
+  function tick(now) {
+    if (moving) {
+      const f = Math.min(1, (now - t0) / TR);
+      p = from + (to - from) * f;
+      if (f >= 1) { moving = false; start = now; }
+    } else if (!paused && now - start > HOLD[k] * 1000) {
+      go(k + 1);
+    }
+    update(now);
+    requestAnimationFrame(tick);
+  }
+
+  function setPaused(v) {
+    paused = v;
+    if (!paused) start = performance.now() - 0;
+    keys.innerHTML = paused ? '<span class="paused">Paused</span> &nbsp;&middot;&nbsp; P to play' : keysText;
+  }
+
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const key = e.key;
+    if (key === 'ArrowRight' || key === ' ' || key === 'PageDown' || key === 'ArrowDown') { e.preventDefault(); go(k + 1); }
+    else if (key === 'ArrowLeft' || key === 'PageUp' || key === 'ArrowUp') { e.preventDefault(); go(k - 1); }
+    else if (/^[1-9]$/.test(key) && +key <= N) go(+key - 1);
+    else if (key === 'p' || key === 'P') setPaused(!paused);
+    else if (key === 'f' || key === 'F') {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen?.().catch(() => {});
+    }
+  });
+  pin.addEventListener('click', e => { if (!e.target.closest('a')) go(k + 1); });
+  let wheelAt = 0;
+  addEventListener('wheel', e => {
+    const now = performance.now();
+    if (Math.abs(e.deltaY) < 12 || now - wheelAt < 1100) return;
+    wheelAt = now;
+    go(k + (e.deltaY > 0 ? 1 : -1));
+  }, { passive: true });
+
+  window.STW = { progress: () => p, steps: N, go, get scene() { return k; } };
+  requestAnimationFrame(tick);
+})();
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const STW = window.STW;
+const canvas = document.getElementById('gl');
+const pin = canvas.parentElement;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+} catch (e) {
+  document.documentElement.classList.add('no-gl');
+}
+
+if (renderer) {
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.NeutralToneMapping ?? THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.5;
+
+  scene.add(new THREE.HemisphereLight(0xdfe8f5, 0x1a2230, 0.6));
+  const key = new THREE.DirectionalLight(0xffffff, 1.7);
+  key.position.set(-7, 15, 9);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  Object.assign(key.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 45 });
+  key.shadow.bias = -0.0003;
+  key.shadow.normalBias = 0.02;
+  key.shadow.radius = 5;
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xe2ebff, 0.4);
+  fill.position.set(9, 5, -6);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0x8fb4ff, 1.1);
+  rim.position.set(6, 7, -11);
+  scene.add(rim);
+
+  const camera = new THREE.PerspectiveCamera(22, 1, 0.1, 300);
+
+  const HS = 2, H = 0.42, PT = 0.3;
+  const GRID = [[-2.45, -2.45], [2.45, -2.45], [-2.45, 2.45], [2.45, 2.45]];
+  const LAYER_T = [1.0, 0.86, 0.62, 0.38];
+  const VIA = [-0.7, -0.42, -0.14, 0.14, 0.42, 0.7];
+
+  function dieTexture() {
+    const S = 1024, c = document.createElement('canvas');
+    c.width = c.height = S;
+    const g = c.getContext('2d');
+    g.fillStyle = '#EDF0F4'; g.fillRect(0, 0, S, S);
+    const blocks = [
+      [56, 56, 452, 372, 'sram'], [540, 56, 428, 222, 'logic'], [540, 310, 428, 248, 'logic'],
+      [56, 460, 300, 508, 'logic'], [388, 460, 236, 508, 'sram'], [656, 590, 312, 378, 'logic']];
+    for (const [x, y, w, h, kind] of blocks) {
+      g.fillStyle = kind === 'sram' ? '#DCE2EA' : '#E4E9EF';
+      g.fillRect(x, y, w, h);
+      g.strokeStyle = 'rgba(95,110,130,0.28)';
+      g.lineWidth = 1;
+      const step = kind === 'sram' ? 9 : 13;
+      for (let yy = y + step; yy < y + h - 4; yy += step) { g.beginPath(); g.moveTo(x + 8, yy + 0.5); g.lineTo(x + w - 8, yy + 0.5); g.stroke(); }
+      if (kind === 'sram') for (let xx = x + 64; xx < x + w - 8; xx += 64) { g.beginPath(); g.moveTo(xx + 0.5, y + 6); g.lineTo(xx + 0.5, y + h - 6); g.stroke(); }
+      g.strokeStyle = '#AEB9C6'; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, w - 2, h - 2);
+    }
+    g.strokeStyle = '#B4BFCC'; g.lineWidth = 8; g.strokeRect(4, 4, S - 8, S - 8);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  }
+
+  function softShadowTexture() {
+    const S = 256, c = document.createElement('canvas');
+    c.width = c.height = S;
+    const g = c.getContext('2d');
+    const grd = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+    grd.addColorStop(0, 'rgba(120,160,210,0.16)');
+    grd.addColorStop(0.55, 'rgba(120,160,210,0.05)');
+    grd.addColorStop(1, 'rgba(120,160,210,0)');
+    g.fillStyle = grd; g.fillRect(0, 0, S, S);
+    return new THREE.CanvasTexture(c);
+  }
+
+  const VERT = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }';
+
+  const heatMaterial = () => new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    uniforms: { uHeat: { value: 0 } },
+    vertexShader: VERT,
+    fragmentShader: `
+      varying vec2 vUv; uniform float uHeat;
+      vec3 ramp(float t) {
+        vec3 a = vec3(1.0, 0.92, 0.78), b = vec3(0.98, 0.67, 0.32), c = vec3(0.86, 0.37, 0.11), d = vec3(0.60, 0.17, 0.06);
+        t = clamp(t, 0.0, 1.0);
+        if (t < 0.33) return mix(a, b, t / 0.33);
+        if (t < 0.66) return mix(b, c, (t - 0.33) / 0.33);
+        return mix(c, d, (t - 0.66) / 0.34);
+      }
+      void main() {
+        vec2 p = vUv - vec2(0.42, 0.44);
+        vec2 q = vUv - vec2(0.72, 0.70);
+        float g = exp(-dot(p, p) * 6.0) + 0.45 * exp(-dot(q, q) * 20.0);
+        float t = uHeat * g;
+        vec2 e = min(vUv, 1.0 - vUv);
+        float edge = smoothstep(0.0, 0.03, min(e.x, e.y));
+        float a = smoothstep(0.03, 0.4, t) * 0.9 * edge;
+        gl_FragColor = vec4(ramp(t * 1.1), a);
+      }`
+  });
+
+  const chanMaterial = () => new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    uniforms: { uTime: { value: 0 }, uOp: { value: 0 }, uSpeed: { value: 1 } },
+    vertexShader: VERT,
+    fragmentShader: `
+      varying vec2 vUv; uniform float uTime; uniform float uOp; uniform float uSpeed;
+      void main() {
+        vec2 p = (vUv - 0.5) * 2.0;
+        float r = length(p);
+        float a = atan(p.y, p.x);
+        float N = 28.0;
+        float f = fract(a * N / 6.2831853 + 0.25);
+        float d = min(f, 1.0 - f) * 6.2831853 / N * r;
+        float ray = 1.0 - smoothstep(0.004, 0.011, d);
+        float m = max(abs(p.x), abs(p.y));
+        float inside = (1.0 - smoothstep(0.86, 0.9, m)) * smoothstep(0.15, 0.19, r);
+        float flow = fract(r * 5.0 - uTime * 0.55 * uSpeed);
+        float pulse = smoothstep(0.0, 0.35, flow) * (1.0 - smoothstep(0.55, 0.9, flow));
+        float ring = 1.0 - smoothstep(0.006, 0.016, abs(r - 0.15));
+        float rim = (1.0 - smoothstep(0.004, 0.012, abs(m - 0.9))) * 0.6;
+        float alpha = (ray * inside * (0.28 + 0.72 * pulse) + ring + rim) * uOp;
+        gl_FragColor = vec4(0.36, 0.66, 1.0, alpha);
+      }`
+  });
+
+  const world = new THREE.Group();
+  scene.add(world);
+
+  const copper = new THREE.MeshStandardMaterial({ color: 0xC47A40, metalness: 0.85, roughness: 0.32 });
+  const traceMat = new THREE.MeshStandardMaterial({ color: 0xC47A40, metalness: 0.8, roughness: 0.35, transparent: true });
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshBasicMaterial({ map: softShadowTexture(), transparent: true, depthWrite: false }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.002;
+  world.add(ground);
+
+  const platMat = new THREE.MeshStandardMaterial({ color: 0xDFE4EA, roughness: 0.9, metalness: 0.0, transparent: true });
+  const platform = new THREE.Mesh(new RoundedBoxGeometry(1, PT, 1, 3, 0.06), platMat);
+  platform.receiveShadow = true;
+  platform.position.y = PT / 2;
+  world.add(platform);
+
+  const traces = new THREE.Group();
+  world.add(traces);
+  const traceBox = new THREE.BoxGeometry(1, 0.02, 0.07);
+  const seg = (x0, z0, x1, z1) => {
+    const m = new THREE.Mesh(traceBox, traceMat);
+    m.scale.x = Math.hypot(x1 - x0, z1 - z0);
+    m.position.set((x0 + x1) / 2, PT + 0.012, (z0 + z1) / 2);
+    m.rotation.y = -Math.atan2(z1 - z0, x1 - x0);
+    traces.add(m);
+  };
+  const R = 4.85;
+  seg(-R, -R, R, -R); seg(R, -R, R, R); seg(R, R, -R, R); seg(-R, R, -R, -R);
+  for (const [gx, gz] of GRID) {
+    seg(gx, Math.sign(gz) * 4.45, gx, Math.sign(gz) * R);
+    seg(Math.sign(gx) * 4.45, gz, Math.sign(gx) * R, gz);
+  }
+  for (const off of [-0.6, 0.6]) {
+    seg(-0.45, -2.45 + off, 0.45, -2.45 + off); seg(-0.45, 2.45 + off, 0.45, 2.45 + off);
+    seg(-2.45 + off, -0.45, -2.45 + off, 0.45); seg(2.45 + off, -0.45, 2.45 + off, 0.45);
+  }
+
+  const PULSES = 14;
+  const pulseMat = new THREE.MeshBasicMaterial({ color: 0xF0A050, transparent: true });
+  const pulses = new THREE.InstancedMesh(new THREE.BoxGeometry(0.34, 0.05, 0.11), pulseMat, PULSES);
+  world.add(pulses);
+  const ringPoint = s => {
+    const L = 8 * R, d = (((s % 1) + 1) % 1) * L;
+    if (d < 2 * R) return [-R + d, -R, 0];
+    if (d < 4 * R) return [R, -R + (d - 2 * R), Math.PI / 2];
+    if (d < 6 * R) return [R - (d - 4 * R), R, 0];
+    return [-R, R - (d - 6 * R), Math.PI / 2];
+  };
+
+  const dieTex = dieTexture();
+  const dieGeo = new RoundedBoxGeometry(2 * HS, H, 2 * HS, 4, 0.035);
+  const plane = new THREE.PlaneGeometry(2 * HS * 0.985, 2 * HS * 0.985);
+  const dies = [0, 1, 2, 3].map(() => {
+    const side = new THREE.MeshStandardMaterial({ color: 0xE2E7ED, roughness: 0.5, metalness: 0.12, emissive: 0xC8501A, emissiveIntensity: 0 });
+    const top = new THREE.MeshStandardMaterial({ map: dieTex, roughness: 0.38, metalness: 0.18 });
+    const mesh = new THREE.Mesh(dieGeo, [side, side, top, side, side, side]);
+    mesh.castShadow = mesh.receiveShadow = true;
+    const heat = new THREE.Mesh(plane, heatMaterial());
+    heat.rotation.x = -Math.PI / 2; heat.position.y = H / 2 + 0.003; heat.renderOrder = 2;
+    const chan = new THREE.Mesh(plane, chanMaterial());
+    chan.rotation.x = -Math.PI / 2; chan.position.y = H / 2 + 0.005; chan.renderOrder = 3;
+    mesh.add(heat, chan);
+    world.add(mesh);
+    return { mesh, side, heat, chan };
+  });
+
+  const VIAS = 3 * VIA.length * VIA.length;
+  const vias = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.028, 0.028, 1, 10), copper, VIAS);
+  vias.castShadow = true;
+  world.add(vias);
+
+  const S = [
+    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, ty: 2.45 },
+    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 32, sway: 0, ew: 18.0, eh: 7.4, ty: 0.25 },
+    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 48, sway: 0, ew: 15.6, eh: 6.8, ty: 0.25 },
+    { layout: 1, gap: 0.1,  plat: 2.7, platA: 1, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 44, sway: 0, ew: 10.0, eh: 5.4, ty: 1.0 },
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 1,   cool: 0, pulse: 0, yaw: 40, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 },
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.9, cool: 0, pulse: 0, yaw: 22, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 },
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.3, cool: 1, pulse: 1, yaw: 26, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 },
+    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0.2, cool: 1, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, ty: 2.45 }
+  ];
+  const KEYS = Object.keys(S[0]);
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const smooth = v => v * v * (3 - 2 * v);
+  const mix = (a, b, f) => { const o = {}; for (const k of KEYS) o[k] = a[k] + (b[k] - a[k]) * f; return o; };
+  const stateAt = p => {
+    const k = Math.min(Math.floor(p), S.length - 1);
+    if (k >= S.length - 1) return S[S.length - 1];
+    return mix(S[k], S[k + 1], smooth(clamp01((p - k - 0.18) / 0.64)));
+  };
+
+  let W = 1, Hpx = 1, narrow = false;
+  function resize() {
+    W = pin.clientWidth; Hpx = pin.clientHeight; narrow = W <= 820;
+    renderer.setSize(W, Hpx, false);
+    camera.aspect = W / Hpx;
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  const tagMM = document.getElementById('tag-mm'), tagUM = document.getElementById('tag-um');
+  const v3 = new THREE.Vector3();
+  const placeTag = (el, x, y, z, op) => {
+    el.style.opacity = op.toFixed(3);
+    if (op < 0.01) return;
+    v3.set(x, y, z).project(camera);
+    el.style.transform = 'translate(' + ((v3.x + 1) / 2 * W).toFixed(1) + 'px,' + ((1 - v3.y) / 2 * Hpx - 6).toFixed(1) + 'px)';
+  };
+
+  const m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion(), p3 = new THREE.Vector3(), s3 = new THREE.Vector3();
+  const up = new THREE.Vector3(0, 1, 0);
+  let flow = 0, last = performance.now();
+  const t0 = last;
+
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const time = reduce ? 0 : (now - t0) / 1000;
+    if (!reduce) flow += dt;
+    const s = stateAt(STW.progress());
+
+    const fw = narrow ? 0.94 : 0.5, fh = narrow ? 0.52 : 0.8;
+    const cx = narrow ? 0.5 : 0.69, cy = narrow ? 0.33 : 0.5;
+    const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const ppu = Math.min(W * fw / s.ew, Hpx * fh / s.eh);
+    const dist = Hpx / (2 * tanV * ppu);
+    const az = THREE.MathUtils.degToRad(s.yaw + (reduce ? 0 : s.sway * 9 * Math.sin(time * 0.2)));
+    const el = THREE.MathUtils.degToRad(27);
+    camera.position.set(Math.sin(az) * Math.cos(el) * dist, s.ty + Math.sin(el) * dist, Math.cos(az) * Math.cos(el) * dist);
+    camera.lookAt(0, s.ty, 0);
+    camera.setViewOffset(W, Hpx, (0.5 - cx) * W, (0.5 - cy) * Hpx, W, Hpx);
+    camera.updateProjectionMatrix();
+
+    const phase = 0.5 + 0.5 * Math.sin(time * 1.2);
+    const heatNow = s.heat * (1 + s.pulse * 0.75 * (phase - 0.5));
+    const pos = [];
+    for (let i = 0; i < 4; i++) {
+      const li = clamp01((s.layout - i * 0.06) / 0.82);
+      const ez = 1 - Math.pow(1 - li, 2.2), exy = smooth(clamp01((li - 0.05) / 0.95));
+      const [gx, gz] = GRID[i];
+      let y = PT + i * (H + s.gap) * ez;
+      if (i > 0) y += s.sway * 0.07 * Math.sin(time * 0.8 + i * 0.9);
+      pos.push([gx * (1 - exy), y, gz * (1 - exy)]);
+    }
+    dies.forEach((d, i) => {
+      const [x, y, z] = pos[i];
+      d.mesh.position.set(x, y + H / 2, z);
+      const t = LAYER_T[i] * heatNow;
+      d.heat.material.uniforms.uHeat.value = t;
+      d.heat.visible = t > 0.01;
+      d.side.emissiveIntensity = t * 0.26;
+      d.chan.material.uniforms.uOp.value = s.cool;
+      d.chan.material.uniforms.uTime.value = flow;
+      d.chan.material.uniforms.uSpeed.value = 1 + s.pulse * 1.4 * (0.5 + 0.5 * Math.sin(time * 1.2 + 0.9));
+      d.chan.visible = s.cool > 0.01;
+    });
+
+    let n = 0;
+    for (let i = 1; i < 4; i++) {
+      const a = pos[i - 1], b = pos[i];
+      const y0 = a[1] + H, y1 = b[1], len = Math.max(0, y1 - y0);
+      const show = s.vias > 0.02 && len > 0.02;
+      for (const u of VIA) for (const v of VIA) {
+        p3.set(b[0] + u * HS, (y0 + y1) / 2, b[2] + v * HS);
+        s3.set(1, show ? len : 0.0001, 1);
+        vias.setMatrixAt(n++, m4.compose(p3, q4.identity(), s3));
+      }
+    }
+    vias.instanceMatrix.needsUpdate = true;
+    vias.visible = s.vias > 0.02;
+
+    platform.scale.set(2 * s.plat, 1, 2 * s.plat);
+    platMat.opacity = s.platA;
+    platform.visible = s.platA > 0.02;
+    traceMat.opacity = s.traces;
+    traces.visible = s.traces > 0.02;
+    pulseMat.opacity = s.traces;
+    pulses.visible = traces.visible;
+    if (pulses.visible) {
+      for (let k = 0; k < PULSES; k++) {
+        const [x, z, rot] = ringPoint(k / PULSES + flow * 0.035);
+        p3.set(x, PT + 0.035, z);
+        q4.setFromAxisAngle(up, rot);
+        s3.set(1, 1, 1);
+        pulses.setMatrixAt(k, m4.compose(p3, q4, s3));
+      }
+      pulses.instanceMatrix.needsUpdate = true;
+    }
+    const gs = s.platA > 0.5 ? 2 * s.plat * 1.55 : 9.5;
+    ground.scale.set(gs, gs, 1);
+
+    placeTag(tagMM, s.plat * 0.35, 0, s.plat + 0.8, s.traces);
+    const um = !narrow && s.layout > 0.9 && s.heat < 0.05 ? clamp01(1 - Math.abs(s.gap - 0.1) * 4) : 0;
+    placeTag(tagUM, HS + 0.08, pos[1][1] + H + s.gap / 2, -HS - 0.08, um);
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+</script>
 </body>
 </html>
