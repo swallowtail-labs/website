@@ -252,7 +252,7 @@
   }
 
 
-  .pin { cursor: pointer; transition: opacity 0.45s ease; }
+  .pin { cursor: pointer; transition: opacity 0.3s ease; }
   .pin.blink { opacity: 0; }
   .pin::before {
     content: "";
@@ -394,8 +394,8 @@
   const pin = document.querySelector('.pin');
   const caps = [...document.querySelectorAll('.cap')];
   const N = caps.length;
-  const HOLD = [5, 5.5, 6, 6, 8, 6.5, 7.5, 7];
-  const TR = 2200;
+  const HOLD = [3, 3.2, 3.6, 3.4, 4.6, 3.8, 4.4, 4.2];
+  const TR = 1300;
   const segs = document.querySelector('.segs');
   const keys = document.querySelector('.hud .keys');
   const keysText = keys.innerHTML;
@@ -413,7 +413,7 @@
     if (Math.abs(j - p) > 1.01) {
       pin.classList.add('blink');
       k = j;
-      setTimeout(() => { p = from = to = j; moving = false; start = performance.now(); pin.classList.remove('blink'); }, 460);
+      setTimeout(() => { p = from = to = j; moving = false; start = performance.now(); pin.classList.remove('blink'); }, 320);
       return;
     }
     from = p; to = j; k = j; t0 = performance.now(); moving = true; start = t0 + TR;
@@ -506,7 +506,7 @@ if (renderer) {
   const scene = new THREE.Scene();
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.5;
+  scene.environmentIntensity = 0.95;
 
   scene.add(new THREE.HemisphereLight(0xdfe8f5, 0x1a2230, 0.6));
   const key = new THREE.DirectionalLight(0xffffff, 1.7);
@@ -527,30 +527,52 @@ if (renderer) {
 
   const camera = new THREE.PerspectiveCamera(22, 1, 0.1, 300);
 
-  const HS = 2, H = 0.42, PT = 0.3;
+  const HS = 2, H = 0.28, PT = 0.22;
   const GRID = [[-2.45, -2.45], [2.45, -2.45], [-2.45, 2.45], [2.45, 2.45]];
   const LAYER_T = [1.0, 0.86, 0.62, 0.38];
-  const VIA = [-0.7, -0.42, -0.14, 0.14, 0.42, 0.7];
+  const VIA = [-0.81, -0.63, -0.45, -0.27, -0.09, 0.09, 0.27, 0.45, 0.63, 0.81];
 
   function dieTexture() {
-    const S = 1024, c = document.createElement('canvas');
+    const S = 2048, c = document.createElement('canvas');
     c.width = c.height = S;
     const g = c.getContext('2d');
-    g.fillStyle = '#EDF0F4'; g.fillRect(0, 0, S, S);
+    let seed = 11;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    g.fillStyle = '#121923'; g.fillRect(0, 0, S, S);
     const blocks = [
-      [56, 56, 452, 372, 'sram'], [540, 56, 428, 222, 'logic'], [540, 310, 428, 248, 'logic'],
-      [56, 460, 300, 508, 'logic'], [388, 460, 236, 508, 'sram'], [656, 590, 312, 378, 'logic']];
+      [110, 110, 860, 700, 'sram'], [1030, 110, 908, 420, 'logic'], [1030, 590, 430, 520, 'core'], [1508, 590, 430, 520, 'core'],
+      [110, 870, 560, 1068, 'logic'], [730, 870, 240, 1068, 'sram'], [1030, 1170, 908, 768, 'logic']];
     for (const [x, y, w, h, kind] of blocks) {
-      g.fillStyle = kind === 'sram' ? '#DCE2EA' : '#E4E9EF';
-      g.fillRect(x, y, w, h);
-      g.strokeStyle = 'rgba(95,110,130,0.28)';
-      g.lineWidth = 1;
-      const step = kind === 'sram' ? 9 : 13;
-      for (let yy = y + step; yy < y + h - 4; yy += step) { g.beginPath(); g.moveTo(x + 8, yy + 0.5); g.lineTo(x + w - 8, yy + 0.5); g.stroke(); }
-      if (kind === 'sram') for (let xx = x + 64; xx < x + w - 8; xx += 64) { g.beginPath(); g.moveTo(xx + 0.5, y + 6); g.lineTo(xx + 0.5, y + h - 6); g.stroke(); }
-      g.strokeStyle = '#AEB9C6'; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, w - 2, h - 2);
+      if (kind === 'sram') {
+        g.fillStyle = '#1b2638'; g.fillRect(x, y, w, h);
+        const cw = 6, ch = 9;
+        for (let yy = y + 8; yy < y + h - 8; yy += ch) for (let xx = x + 8; xx < x + w - 8; xx += cw) {
+          const v = 40 + (rnd() * 18) | 0;
+          g.fillStyle = 'rgb(' + (v - 6) + ',' + (v + 16) + ',' + (v + 48) + ')';
+          g.fillRect(xx, yy, cw - 2, ch - 3);
+        }
+        g.fillStyle = 'rgba(120,150,200,0.35)';
+        for (let xx = x + 128; xx < x + w - 8; xx += 128) g.fillRect(xx, y + 4, 6, h - 8);
+      } else {
+        g.fillStyle = kind === 'core' ? '#2a2420' : '#1d2129'; g.fillRect(x, y, w, h);
+        for (let yy = y + 6; yy < y + h - 6; yy += 7) {
+          let xx = x + 6;
+          while (xx < x + w - 6) {
+            const cw = 4 + (rnd() * 26) | 0;
+            const v = 34 + (rnd() * 34) | 0;
+            g.fillStyle = kind === 'core' ? 'rgb(' + (v + 40) + ',' + (v + 18) + ',' + v + ')' : 'rgb(' + v + ',' + (v + 6) + ',' + (v + 14) + ')';
+            g.fillRect(xx, yy, Math.min(cw, x + w - 6 - xx), 5);
+            xx += cw + 1;
+          }
+        }
+      }
+      g.strokeStyle = 'rgba(190,205,225,0.45)'; g.lineWidth = 3; g.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
     }
-    g.strokeStyle = '#B4BFCC'; g.lineWidth = 8; g.strokeRect(4, 4, S - 8, S - 8);
+    g.fillStyle = 'rgba(200,160,110,0.13)';
+    for (let i = 70; i < S - 60; i += 48) { g.fillRect(i, 60, 5, S - 120); g.fillRect(60, i, S - 120, 5); }
+    g.fillStyle = '#c9a15e';
+    for (let i = 120; i < S - 100; i += 38) { g.fillRect(i, 28, 20, 20); g.fillRect(i, S - 48, 20, 20); g.fillRect(28, i, 20, 20); g.fillRect(S - 48, i, 20, 20); }
+    g.strokeStyle = '#4b5666'; g.lineWidth = 10; g.strokeRect(5, 5, S - 10, S - 10);
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -572,11 +594,11 @@ if (renderer) {
   const VERT = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }';
 
   const heatMaterial = () => new THREE.ShaderMaterial({
-    transparent: true, depthWrite: false,
-    uniforms: { uHeat: { value: 0 } },
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uHeat: { value: 0 }, uA: { value: new THREE.Vector2(0.5, 0.5) }, uB: { value: new THREE.Vector2(0.5, 0.5) }, uIA: { value: 0 }, uIB: { value: 0 } },
     vertexShader: VERT,
     fragmentShader: `
-      varying vec2 vUv; uniform float uHeat;
+      varying vec2 vUv; uniform float uHeat; uniform vec2 uA; uniform vec2 uB; uniform float uIA; uniform float uIB;
       vec3 ramp(float t) {
         vec3 a = vec3(1.0, 0.92, 0.78), b = vec3(0.98, 0.67, 0.32), c = vec3(0.86, 0.37, 0.11), d = vec3(0.60, 0.17, 0.06);
         t = clamp(t, 0.0, 1.0);
@@ -585,14 +607,13 @@ if (renderer) {
         return mix(c, d, (t - 0.66) / 0.34);
       }
       void main() {
-        vec2 p = vUv - vec2(0.42, 0.44);
-        vec2 q = vUv - vec2(0.72, 0.70);
-        float g = exp(-dot(p, p) * 6.0) + 0.45 * exp(-dot(q, q) * 20.0);
+        vec2 p = vUv - uA, q = vUv - uB;
+        float g = uIA * exp(-dot(p, p) * 26.0) + uIB * exp(-dot(q, q) * 26.0);
         float t = uHeat * g;
         vec2 e = min(vUv, 1.0 - vUv);
         float edge = smoothstep(0.0, 0.03, min(e.x, e.y));
-        float a = smoothstep(0.03, 0.4, t) * 0.9 * edge;
-        gl_FragColor = vec4(ramp(t * 1.1), a);
+        float a = smoothstep(0.02, 0.5, t) * 0.62 * edge;
+        gl_FragColor = vec4(ramp(t * 0.95), a);
       }`
   });
 
@@ -624,7 +645,7 @@ if (renderer) {
   const world = new THREE.Group();
   scene.add(world);
 
-  const copper = new THREE.MeshStandardMaterial({ color: 0xC47A40, metalness: 0.85, roughness: 0.32 });
+  const copper = new THREE.MeshStandardMaterial({ color: 0xE08A4A, metalness: 1.0, roughness: 0.22, emissive: 0x6a2c0c, emissiveIntensity: 0.35 });
   const traceMat = new THREE.MeshStandardMaterial({ color: 0xC47A40, metalness: 0.8, roughness: 0.35, transparent: true });
 
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
@@ -633,7 +654,7 @@ if (renderer) {
   ground.position.y = -0.002;
   world.add(ground);
 
-  const platMat = new THREE.MeshStandardMaterial({ color: 0xDFE4EA, roughness: 0.9, metalness: 0.0, transparent: true });
+  const platMat = new THREE.MeshPhysicalMaterial({ color: 0x252d38, roughness: 0.55, metalness: 0.2, clearcoat: 0.6, clearcoatRoughness: 0.35, transparent: true });
   const platform = new THREE.Mesh(new RoundedBoxGeometry(1, PT, 1, 3, 0.06), platMat);
   platform.receiveShadow = true;
   platform.position.y = PT / 2;
@@ -675,9 +696,10 @@ if (renderer) {
   const dieTex = dieTexture();
   const dieGeo = new RoundedBoxGeometry(2 * HS, H, 2 * HS, 4, 0.035);
   const plane = new THREE.PlaneGeometry(2 * HS * 0.985, 2 * HS * 0.985);
+  const coreGeo = new RoundedBoxGeometry(0.86, 0.07, 0.86, 2, 0.02);
   const dies = [0, 1, 2, 3].map(() => {
-    const side = new THREE.MeshStandardMaterial({ color: 0xE2E7ED, roughness: 0.5, metalness: 0.12, emissive: 0xC8501A, emissiveIntensity: 0 });
-    const top = new THREE.MeshStandardMaterial({ map: dieTex, roughness: 0.38, metalness: 0.18 });
+    const side = new THREE.MeshStandardMaterial({ color: 0x3a4452, roughness: 0.3, metalness: 0.75, emissive: 0xE0601E, emissiveIntensity: 0 });
+    const top = new THREE.MeshPhysicalMaterial({ map: dieTex, roughness: 0.3, metalness: 0.45, clearcoat: 1, clearcoatRoughness: 0.08, iridescence: 0.85, iridescenceIOR: 1.7, iridescenceThicknessRange: [180, 620] });
     const mesh = new THREE.Mesh(dieGeo, [side, side, top, side, side, side]);
     mesh.castShadow = mesh.receiveShadow = true;
     const heat = new THREE.Mesh(plane, heatMaterial());
@@ -685,24 +707,52 @@ if (renderer) {
     const chan = new THREE.Mesh(plane, chanMaterial());
     chan.rotation.x = -Math.PI / 2; chan.position.y = H / 2 + 0.005; chan.renderOrder = 3;
     mesh.add(heat, chan);
+    const coreMat = new THREE.MeshStandardMaterial({ color: 0x5a3a26, metalness: 0.6, roughness: 0.35, emissive: 0xff6a1a, emissiveIntensity: 0.15 });
+    const cores = [0, 1].map(() => {
+      const c = new THREE.Mesh(coreGeo, coreMat);
+      c.castShadow = true;
+      c.position.y = H / 2 + 0.035;
+      mesh.add(c);
+      return c;
+    });
     world.add(mesh);
-    return { mesh, side, heat, chan };
+    return { mesh, side, heat, chan, cores, coreMat };
   });
 
   const VIAS = 3 * VIA.length * VIA.length;
-  const vias = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.028, 0.028, 1, 10), copper, VIAS);
+  const vias = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.016, 0.016, 1, 8), copper, VIAS);
   vias.castShadow = true;
   world.add(vias);
 
+  const CELLS = [-1.5, -0.5, 0.5, 1.5];
+  const C = (a, b) => [CELLS[a], CELLS[b]];
+  const PLAN = [
+    [[C(1, 1), C(2, 2)], [C(3, 3), C(0, 2)], [C(1, 3), C(3, 0)], [C(0, 0), C(2, 2)]],
+    [[C(1, 1), C(2, 2)], [C(0, 3), C(3, 1)], [C(2, 3), C(1, 0)], [C(0, 0), C(3, 3)]],
+    [[C(1, 1), C(2, 2)], [C(1, 1), C(3, 0)], [C(3, 3), C(0, 1)], [C(2, 2), C(0, 3)]],
+    [[C(1, 1), C(2, 2)], [C(1, 1), C(2, 2)], [C(1, 1), C(2, 2)], [C(1, 1), C(2, 2)]]
+  ];
+  // per die: [naive, try 1, try 2, final]
+  const PATH = [0, 1, 2, 3].map(i => [PLAN[3][i], PLAN[i === 0 ? 0 : 0][i], PLAN[2][i], [
+    [C(1, 1), C(3, 3)], [C(0, 2), C(2, 0)], [C(3, 1), C(1, 3)], [C(0, 0), C(2, 2)]][i]]);
+  const coreAt = (i, j, o) => {
+    const segs = PATH[i].length - 1, x = Math.min(segs - 1e-6, o * segs), k = Math.floor(x);
+    let f = x - k;
+    f = smooth(clamp01((f - 0.15) / 0.7));
+    const a = PATH[i][k][j], b = PATH[i][k + 1][j];
+    return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+  };
+  let optCur = 0;
+
   const S = [
-    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, ty: 2.45 },
-    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 32, sway: 0, ew: 18.0, eh: 7.4, ty: 0.25 },
-    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 48, sway: 0, ew: 15.6, eh: 6.8, ty: 0.25 },
-    { layout: 1, gap: 0.1,  plat: 2.7, platA: 1, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 44, sway: 0, ew: 10.0, eh: 5.4, ty: 1.0 },
-    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 1,   cool: 0, pulse: 0, yaw: 40, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 },
-    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.9, cool: 0, pulse: 0, yaw: 22, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 },
-    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.3, cool: 1, pulse: 1, yaw: 26, sway: 0, ew: 9.6,  eh: 7.0, ty: 1.85 },
-    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0.2, cool: 1, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, ty: 2.45 }
+    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, opt: 0, ty: 2.45 },
+    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 32, sway: 0, ew: 18.0, eh: 7.4, opt: 0, ty: 0.25 },
+    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 48, sway: 0, ew: 15.6, eh: 6.8, opt: 0, ty: 0.25 },
+    { layout: 1, gap: 0.1,  plat: 2.7, platA: 1, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 44, sway: 0, ew: 10.0, eh: 5.4, opt: 0, ty: 1.0 },
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 1,   cool: 0, pulse: 0, yaw: 40, sway: 0, ew: 9.6,  eh: 7.0, opt: 0, ty: 1.85 },
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.9, cool: 0, pulse: 0, yaw: 22, sway: 0, ew: 9.6,  eh: 7.0, opt: 1, ty: 1.85 },
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.3, cool: 1, pulse: 1, yaw: 26, sway: 0, ew: 9.6,  eh: 7.0, opt: 1, ty: 1.85 },
+    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0.2, cool: 1, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, opt: 1, ty: 2.45 }
   ];
   const KEYS = Object.keys(S[0]);
   const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -711,7 +761,7 @@ if (renderer) {
   const stateAt = p => {
     const k = Math.min(Math.floor(p), S.length - 1);
     if (k >= S.length - 1) return S[S.length - 1];
-    return mix(S[k], S[k + 1], smooth(clamp01((p - k - 0.18) / 0.64)));
+    return mix(S[k], S[k + 1], smooth(clamp01((p - k - 0.06) / 0.88)));
   };
 
   let W = 1, Hpx = 1, narrow = false;
@@ -766,13 +816,32 @@ if (renderer) {
       if (i > 0) y += s.sway * 0.07 * Math.sin(time * 0.8 + i * 0.9);
       pos.push([gx * (1 - exy), y, gz * (1 - exy)]);
     }
+    const target = s.opt;
+    optCur += Math.max(-dt * 2.5, Math.min(dt * 0.32, target - optCur));
+    if (reduce) optCur = target;
+    const cp = [0, 1, 2, 3].map(i => [coreAt(i, 0, optCur), coreAt(i, 1, optCur)]);
+    const crowd = (i, c) => {
+      let n = 1;
+      for (let j = 0; j < 4; j++) if (j !== i) for (const o of cp[j]) {
+        const dd = Math.hypot(o[0] - c[0], o[1] - c[1]);
+        n += Math.max(0, 1 - dd / 1.1) / (1 + Math.abs(i - j) * 0.35);
+      }
+      return n;
+    };
     dies.forEach((d, i) => {
       const [x, y, z] = pos[i];
       d.mesh.position.set(x, y + H / 2, z);
-      const t = LAYER_T[i] * heatNow;
-      d.heat.material.uniforms.uHeat.value = t;
+      const u = d.heat.material.uniforms;
+      const ia = crowd(i, cp[i][0]) / 3.2, ib = crowd(i, cp[i][1]) / 3.2;
+      const t = (0.45 + 0.55 * LAYER_T[i]) * heatNow;
+      cp[i].forEach((c, j) => d.cores[j].position.set(c[0], H / 2 + 0.035, c[1]));
+      u.uA.value.set((cp[i][0][0] + HS) / (2 * HS), (HS - cp[i][0][1]) / (2 * HS));
+      u.uB.value.set((cp[i][1][0] + HS) / (2 * HS), (HS - cp[i][1][1]) / (2 * HS));
+      u.uIA.value = ia; u.uIB.value = ib;
+      u.uHeat.value = t;
       d.heat.visible = t > 0.01;
-      d.side.emissiveIntensity = t * 0.26;
+      d.coreMat.emissiveIntensity = 0.15 + t * 1.3 * Math.max(ia, ib);
+      d.side.emissiveIntensity = t * 0.18 * Math.max(ia, ib);
       d.chan.material.uniforms.uOp.value = s.cool;
       d.chan.material.uniforms.uTime.value = flow;
       d.chan.material.uniforms.uSpeed.value = 1 + s.pulse * 1.4 * (0.5 + 0.5 * Math.sin(time * 1.2 + 0.9));
