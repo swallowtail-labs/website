@@ -292,6 +292,8 @@
   .segs b i { position: absolute; inset: 0; background: var(--slate); transform-origin: left; transform: scaleX(0); }
   .segs b.done i { transform: scaleX(1); }
   .hud .paused { color: var(--accent); }
+  .tag3d.loop { color: #8fb4ff; font-size: 0.78rem; }
+  .tag3d.loop.back { color: var(--accent); }
   .cap .reach { margin-top: 1.6rem; font: 400 0.95rem/1 var(--mono); letter-spacing: 0.02em; color: var(--accent); }
 
   .no-gl #gl { display: none; }
@@ -324,7 +326,6 @@
 
 <header class="bar">
   <a class="brand" href="/"><img src="swallowtail-mark.svg" alt="" width="22" height="22"><span>SWALLOWTAIL</span></a>
-  <a class="mail" href="mailto:thomas@swallowtaillabs.com" aria-label="Email" title="Email"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6.2L20.5 7"/></svg></a>
 </header>
 
 <main>
@@ -334,6 +335,9 @@
       <canvas id="gl" aria-label="A 3D chip: four dies stacked into a tower" role="img"></canvas>
       <span class="tag3d" id="tag-mm">millimeters</span>
       <span class="tag3d" id="tag-um">micrometers</span>
+      <span class="tag3d loop" id="tag-model">physics model</span>
+      <span class="tag3d loop" id="tag-out">heat and power</span>
+      <span class="tag3d loop back" id="tag-back">new layout</span>
 
       <div class="captions">
         <div class="cap">
@@ -379,7 +383,7 @@
             <dd>DVFS and coolant flow, at run time</dd>
           </dl>
         </div>
-        <div class="cap"><h2 class="big"><span class="nb">Software-hardware</span> co-design</h2><p class="reach">thomas@swallowtaillabs.com</p></div>
+        <div class="cap"><h2 class="big"><span class="nb">Software-hardware</span> co-design</h2></div>
       </div>
 
       
@@ -394,7 +398,7 @@
   const pin = document.querySelector('.pin');
   const caps = [...document.querySelectorAll('.cap')];
   const N = caps.length;
-  const HOLD = [3, 3.2, 3.6, 3.4, 4.6, 3.8, 4.4, 4.2];
+  const HOLD = [3, 3.2, 3.6, 3.4, 4.4, 5, 4.4, 4.2];
   const TR = 1300;
   const segs = document.querySelector('.segs');
   const keys = document.querySelector('.hud .keys');
@@ -724,6 +728,38 @@ if (renderer) {
   vias.castShadow = true;
   world.add(vias);
 
+  const nodeGroup = new THREE.Group();
+  world.add(nodeGroup);
+  const nodeLineMat = new THREE.LineBasicMaterial({ color: 0x8fb4ff, transparent: true, opacity: 0 });
+  const nodeShell = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.05, 1)), nodeLineMat);
+  const nodeInner = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.OctahedronGeometry(0.55, 0)), nodeLineMat);
+  const nodeCoreMat = new THREE.MeshBasicMaterial({ color: 0x5d9cff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const nodeCore = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 16), nodeCoreMat);
+  nodeGroup.add(nodeShell, nodeInner, nodeCore);
+  const NSEG = 40;
+  const mkPath = color => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array((NSEG + 1) * 3), 3));
+    const m = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0 });
+    const l = new THREE.Line(g, m);
+    l.frustumCulled = false;
+    world.add(l);
+    return { g, m, l, curve: new THREE.QuadraticBezierCurve3(new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()) };
+  };
+  const pathOut = mkPath(0x8fb4ff), pathBack = mkPath(0xF2803A);
+  const DOTS = 9;
+  const dotGeo = new THREE.SphereGeometry(0.11, 12, 8);
+  const mkDots = color => {
+    const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    const d = new THREE.InstancedMesh(dotGeo, m, DOTS);
+    d.frustumCulled = false;
+    world.add(d);
+    return { d, m };
+  };
+  const dotsOut = mkDots(0xa9c6ff), dotsBack = mkDots(0xffa060);
+  const tmpV = new THREE.Vector3();
+  let fb = 0;
+
   const CELLS = [-1.5, -0.5, 0.5, 1.5];
   const C = (a, b) => [CELLS[a], CELLS[b]];
   const PLAN = [
@@ -745,14 +781,14 @@ if (renderer) {
   let optCur = 0;
 
   const S = [
-    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, opt: 0, ty: 2.45 },
-    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 32, sway: 0, ew: 18.0, eh: 7.4, opt: 0, ty: 0.25 },
-    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 48, sway: 0, ew: 15.6, eh: 6.8, opt: 0, ty: 0.25 },
-    { layout: 1, gap: 0.1,  plat: 2.7, platA: 1, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 44, sway: 0, ew: 10.0, eh: 5.4, opt: 0, ty: 1.0 },
-    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 1,   cool: 0, pulse: 0, yaw: 40, sway: 0, ew: 9.6,  eh: 7.0, opt: 0, ty: 1.85 },
-    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.9, cool: 0, pulse: 0, yaw: 22, sway: 0, ew: 9.6,  eh: 7.0, opt: 1, ty: 1.85 },
-    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.3, cool: 1, pulse: 1, yaw: 26, sway: 0, ew: 9.6,  eh: 7.0, opt: 1, ty: 1.85 },
-    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0.2, cool: 1, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, opt: 1, ty: 2.45 }
+    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 38, sway: 1, ew: 9.4,  eh: 7.6, opt: 0, node: 0, lx: 0, ty: 2.45 },
+    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 32, sway: 0, ew: 18.0, eh: 7.4, opt: 0, node: 0, lx: 0, ty: 0.25 },
+    { layout: 0, gap: 0,    plat: 5.4, platA: 1, traces: 1, vias: 0,    heat: 0,   cool: 0, pulse: 0, yaw: 48, sway: 0, ew: 15.6, eh: 6.8, opt: 0, node: 0, lx: 0, ty: 0.25 },
+    { layout: 1, gap: 0.1,  plat: 2.7, platA: 1, traces: 0, vias: 1,    heat: 0,   cool: 0, pulse: 0, yaw: 44, sway: 0, ew: 10.0, eh: 5.4, opt: 0, node: 0, lx: 0, ty: 1.0 },
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 1,   cool: 0, pulse: 0, yaw: 40, sway: 0, ew: 9.6,  eh: 7.0, opt: 0, node: 0, lx: 0, ty: 1.85 },
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.9, cool: 0, pulse: 0, yaw: 22, sway: 0, ew: 15.0,  eh: 7.0, opt: 1, node: 1, lx: 2.7, ty: 1.85 },
+    { layout: 1, gap: 0.62, plat: 2.7, platA: 1, traces: 0, vias: 0.45, heat: 0.3, cool: 1, pulse: 1, yaw: 26, sway: 0, ew: 15.0,  eh: 7.0, opt: 1, node: 1, lx: 2.7, ty: 1.85 },
+    { layout: 1, gap: 0.8,  plat: 2.7, platA: 0, traces: 0, vias: 1,    heat: 0.2, cool: 1, pulse: 0, yaw: 38, sway: 1, ew: 15.0,  eh: 7.6, opt: 1, node: 1, lx: 2.7, ty: 2.45 }
   ];
   const KEYS = Object.keys(S[0]);
   const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -774,6 +810,7 @@ if (renderer) {
   resize();
 
   const tagMM = document.getElementById('tag-mm'), tagUM = document.getElementById('tag-um');
+  const tagModel = document.getElementById('tag-model'), tagOut = document.getElementById('tag-out'), tagBack = document.getElementById('tag-back');
   const v3 = new THREE.Vector3();
   const placeTag = (el, x, y, z, op) => {
     el.style.opacity = op.toFixed(3);
@@ -800,8 +837,9 @@ if (renderer) {
     const dist = Hpx / (2 * tanV * ppu);
     const az = THREE.MathUtils.degToRad(s.yaw + (reduce ? 0 : s.sway * 9 * Math.sin(time * 0.2)));
     const el = THREE.MathUtils.degToRad(27);
-    camera.position.set(Math.sin(az) * Math.cos(el) * dist, s.ty + Math.sin(el) * dist, Math.cos(az) * Math.cos(el) * dist);
-    camera.lookAt(0, s.ty, 0);
+    const rx = Math.cos(az), rz = -Math.sin(az), tx = rx * s.lx, tz = rz * s.lx;
+    camera.position.set(tx + Math.sin(az) * Math.cos(el) * dist, s.ty + Math.sin(el) * dist, tz + Math.cos(az) * Math.cos(el) * dist);
+    camera.lookAt(tx, s.ty, tz);
     camera.setViewOffset(W, Hpx, (0.5 - cx) * W, (0.5 - cy) * Hpx, W, Hpx);
     camera.updateProjectionMatrix();
 
@@ -816,9 +854,14 @@ if (renderer) {
       if (i > 0) y += s.sway * 0.07 * Math.sin(time * 0.8 + i * 0.9);
       pos.push([gx * (1 - exy), y, gz * (1 - exy)]);
     }
-    const target = s.opt;
-    optCur += Math.max(-dt * 2.5, Math.min(dt * 0.32, target - optCur));
-    if (reduce) optCur = target;
+    const CYC = 1.3;
+    const loopOn = s.node > 0.5 && s.opt > 0.5;
+    if (loopOn) fb += dt; else fb = 0;
+    const step = Math.min(3, Math.floor(fb / CYC));
+    const fph = (fb % CYC) / CYC;
+    const target = loopOn ? step / 3 : 0;
+    optCur += Math.max(-dt * 2.5, Math.min(dt * 1.1, target - optCur));
+    if (reduce) optCur = s.opt;
     const cp = [0, 1, 2, 3].map(i => [coreAt(i, 0, optCur), coreAt(i, 1, optCur)]);
     const crowd = (i, c) => {
       let n = 1;
@@ -881,6 +924,50 @@ if (renderer) {
     }
     const gs = s.platA > 0.5 ? 2 * s.plat * 1.55 : 9.5;
     ground.scale.set(gs, gs, 1);
+
+    const nodeA = s.node;
+    const rx2 = Math.cos(az), rz2 = -Math.sin(az);
+    const midY = PT + 1.6 * (H + s.gap);
+    nodeGroup.position.set(rx2 * 5.6, midY + 0.7, rz2 * 5.6);
+    nodeGroup.scale.setScalar(1.25);
+    nodeGroup.visible = nodeA > 0.02;
+    nodeShell.rotation.y = time * 0.25; nodeShell.rotation.x = time * 0.11;
+    nodeInner.rotation.y = -time * 0.4; nodeInner.rotation.z = time * 0.2;
+    const arrive = loopOn ? Math.exp(-Math.pow((fph - 0.5) / 0.08, 2)) : 0;
+    nodeLineMat.opacity = nodeA * (0.7 + 0.3 * arrive);
+    nodeCoreMat.opacity = nodeA * (0.35 + 0.65 * arrive);
+    nodeCore.scale.setScalar(1 + arrive * 0.35);
+    const sx = rx2 * (HS + 0.25), sz = rz2 * (HS + 0.25);
+    const np = nodeGroup.position;
+    pathOut.curve.v0.set(sx, midY + 0.9, sz); pathOut.curve.v2.set(np.x - rx2 * 1.35, np.y + 0.2, np.z - rz2 * 1.35);
+    pathOut.curve.v1.set((sx + np.x) / 2, np.y + 2.0, (sz + np.z) / 2);
+    pathBack.curve.v0.set(np.x - rx2 * 1.35, np.y - 0.35, np.z - rz2 * 1.35); pathBack.curve.v2.set(sx, midY - 0.6, sz);
+    pathBack.curve.v1.set((sx + np.x) / 2, midY - 1.9, (sz + np.z) / 2);
+    for (const P of [pathOut, pathBack]) {
+      const a = P.g.attributes.position;
+      for (let k = 0; k <= NSEG; k++) { P.curve.getPoint(k / NSEG, tmpV); a.setXYZ(k, tmpV.x, tmpV.y, tmpV.z); }
+      a.needsUpdate = true;
+      P.m.opacity = nodeA * 0.55;
+      P.l.visible = nodeA > 0.02;
+    }
+    const packet = (D, P, head, on) => {
+      for (let k = 0; k < DOTS; k++) {
+        const u = head - k * 0.045;
+        const vis = on && u >= 0 && u <= 1;
+        if (vis) P.curve.getPoint(u, p3); else p3.set(0, -50, 0);
+        s3.setScalar(vis ? 1 - k / DOTS * 0.6 : 0.0001);
+        D.d.setMatrixAt(k, m4.compose(p3, q4.identity(), s3));
+      }
+      D.d.instanceMatrix.needsUpdate = true;
+      D.m.opacity = nodeA;
+      D.d.visible = nodeA > 0.02;
+    };
+    packet(dotsOut, pathOut, Math.min(1.3, fph / 0.42), loopOn && fph < 0.55);
+    packet(dotsBack, pathBack, Math.min(1.3, (fph - 0.5) / 0.42), loopOn && fph >= 0.5);
+    const tagOp = narrow ? 0 : nodeA;
+    placeTag(tagModel, np.x + rx2 * 1.6, np.y + 1.3, np.z + rz2 * 1.6, tagOp);
+    pathOut.curve.getPoint(0.5, tmpV); placeTag(tagOut, tmpV.x, tmpV.y + 0.25, tmpV.z, tagOp);
+    pathBack.curve.getPoint(0.5, tmpV); placeTag(tagBack, tmpV.x, tmpV.y - 0.35, tmpV.z, tagOp);
 
     placeTag(tagMM, s.plat * 0.35, 0, s.plat + 0.8, s.traces);
     const um = !narrow && s.layout > 0.9 && s.heat < 0.05 ? clamp01(1 - Math.abs(s.gap - 0.1) * 4) : 0;
