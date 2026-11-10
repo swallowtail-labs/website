@@ -7,7 +7,9 @@
   const ctx = cv.getContext("2d");
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const hint = document.getElementById("hint");
-  const hintText = hint.textContent;
+  let hintText = "Click for sound · P pause · F full screen";
+  hint.textContent = hintText;
+  const SND = window.SwallowSound;
 
   let W = 1, H = 1, DPR = 1, B = 1;
   function resize() {
@@ -437,6 +439,17 @@
   const starts = []; { let t = 0; for (const s of SHOTS) { starts.push(t); t += s.b * BEAT; } }
   const LOOP = starts[starts.length - 1] + SHOTS[SHOTS.length - 1].b * BEAT;
 
+  // ---------- soundtrack arrangement: one kind per shot ----------
+  const KIND = ["flash", "intro", "intro", "flash", "intro", "flash", "full", "page", "full", "flash", "full", "full", "build", "full", "full", "end"];
+  const startBeat = starts.map((t) => Math.round(t / BEAT));
+  function beatInfo(g) {
+    let i = SHOTS.length - 1; while (i > 0 && startBeat[i] > g) i--;
+    const j = g - startBeat[i];
+    return { g, j, kind: KIND[i], b: SHOTS[i].b, last: j === SHOTS[i].b - 1 };
+  }
+  const plan = { BEAT, LOOP, beatInfo };
+  let lastPage = null;
+
   let t0 = performance.now(), paused = false, pauseAt = 0, skip = 0;
   function shotAt(t) {
     let i = SHOTS.length - 1;
@@ -448,6 +461,7 @@
     pumpOptimizer();
     const tl = paused ? pauseAt : ((now - t0) / 1000 + skip) % LOOP;
     const i = shotAt(tl), sh = SHOTS[i];
+    if (SND && lastPage !== !!sh.page) { lastPage = !!sh.page; SND.setTone(lastPage); }
     const local = tl - starts[i], dur = sh.b * BEAT, u = local / dur;
     const sinceBeat = (local % BEAT);
     const cutHit = reduce ? 0 : Math.max(0, 1 - local / 0.28);
@@ -499,8 +513,25 @@
     else if (e.key === "f" || e.key === "F") { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(() => {}); }
     else if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); jump(1); }
     else if (e.key === "ArrowLeft") { e.preventDefault(); jump(-1); }
+    else if ((e.key === "m" || e.key === "M") && SND && SND.started) { SND.enable(!SND.on); soundHint(); }
   });
   cv.addEventListener("click", () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {}); });
+  // browsers only allow audio after a gesture: the first click or key starts the soundtrack
+  function soundHint() {
+    hintText = (SND.on ? "M mute" : "M sound") + " · P pause · F full screen";
+    if (!paused) hint.textContent = hintText;
+  }
+  // the audio scheduler runs on its own timer so a slow frame never drops a beat
+  if (SND) setInterval(() => SND.tick(paused ? pauseAt : ((performance.now() - t0) / 1000 + skip) % LOOP, paused, plan), 25);
+  function firstGesture(e) {
+    if (!SND || SND.started) return;
+    if (e.type === "keydown" && (e.metaKey || e.ctrlKey || e.altKey)) return;
+    SND.enable(true); soundHint();
+    if (e.type === "keydown" && (e.key === "m" || e.key === "M")) e.stopPropagation();
+    removeEventListener("pointerdown", firstGesture, true); removeEventListener("keydown", firstGesture, true);
+  }
+  addEventListener("pointerdown", firstGesture, true);
+  addEventListener("keydown", firstGesture, true);
   window.SWT = { status: () => ({ n: trace.length, genDone, peak: trace[trace.length - 1].peak }), jump, setPaused, shots: SHOTS.length, at: (i, f = 0) => { t0 = performance.now(); skip = starts[i] + 0.001 + f * SHOTS[i].b * BEAT; pauseAt = skip; } };
 
   (document.fonts ? document.fonts.load("italic 40px \"STIX Two Text\"") : Promise.resolve()).finally(() => requestAnimationFrame(render));
